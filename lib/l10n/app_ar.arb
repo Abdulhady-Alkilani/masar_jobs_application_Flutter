@@ -1,0 +1,504 @@
+{
+  "@@locale": "ar",
+  "appTitle": "تطبيق مسار للوظائف",
+
+  // --- General ---
+  "loading": "جارٍ التحميل...",
+  "error": "خطأ",
+  "ok": "موافق",
+  "cancel": "إلغاء",
+  "add": "إضافة",
+  "edit": "تعديل",
+  "delete": "حذف",
+  "save": "حفظ",
+  "search": "بحث",
+  "no_data_available": "لا توجد بيانات متاحة.",
+  "unexpected_error": "حدث خطأ غير متوقع.",
+  "status": "الحالة",
+  "type": "النوع",
+
+  // --- Authentication ---
+  "login_screen_title": "تسجيل الدخول",
+  "register_screen_title": "إنشاء حساب",
+  "button_login": "تسجيل الدخول",
+  "button_register": "إنشاء الحساب",
+  "button_logout": "تسجيل الخروج",
+  "prompt_no_account": "لا تمتلك حساب؟ سجل الآن",
+  "prompt_has_account": "تمتلك حساب بالفعل؟ سجل دخول",
+  "label_email": "البريد الإلكتروني",
+  "label_password": "كلمة المرور",
+  "label_password_confirm": "تأكيد كلمة المرور",
+  "label_first_name": "الاسم الأول",
+  "label_last_name": "الاسم الأخير",
+  "label_username": "اسم المستخدم",
+  "label_phone": "رقم الهاتف (اختياري)",
+  "label_account_type": "نوع الحساب",
+  "error_email_required": "الرجاء إدخال البريد الإلكتروني",
+  "error_password_required": "الرجاء إدخال كلمة المرور",
+  "error_first_name_required": "الرجاء إدخال الاسم الأول",
+  "error_last_name_required": "الرجاء إدخال الاسم الأخير",
+  "error_username_required": "الرجاء إدخال اسم المستخدم",
+  "error_password_mismatch": "كلمة المرور غير متطابقة",
+  "error_select_account_type": "الرجاء اختيار نوع الحساب",
+  "error_validation": "خطأ في التحقق من صحة البيانات",
+  "error_unauthenticated": "غير مصادق عليه.",
+  "error_unauthorized": "غير مصرح لك.",
+  "error_not_found": "غير موجود.",
+  "error_conflict": "تعارض.",
+  "error_bad_request": "طلب خاطئ.",
+  "message_login_success": "تم تسجيل الدخول بنجاح",
+  "message_register_success": "تم إنشاء الحساب بنجاح!",
+  "message_logout_success": "تم تسجيل الخروج بنجاح",
+  "message_user_not_authenticated": "المستخدم غير مصادق عليه.",
+
+
+  // --- Home Screen ---
+  "home_screen_title": "الشاشة الرئيسية",
+  "welcome_message": "مرحباً بك، {userName}!",
+  "account_type": "نوع الحساب: {type}",
+  "profile_section_title": "ملفي الشخصي",
+  "user_specific_sections_title": "أقسامي:",
+  "public_resources_sections_title": "الموارد العامة:",
+
+
+  // --- User Profile ---
+  "profile_screen_title": "ملفي الشخصي",
+  "profile_data_title": "بيانات الملف الشخصي:",
+  "user_data_title": "بيانات المستخدم الأساسية:",
+  "label_university": "الجامعة",
+  "label_gpa": "المعدل التراكمي",
+  "label_personal_description": "نبذة شخصية",
+  "label_technical_description": "نبذة اختصاصية",
+  "label_git_link": "رابط GitHub",
+  "message_no_profile_data": "لا توجد بيانات ملف شخصي متاحة.",
+  "message_no_skills_added": "لم يتم إضافة مهارات بعد.",
+  "button_edit_profile": "تعديل الملف الشخصي",
+  "button_edit_skills": "تعديل المهارات",
+  "message_profile_not_applicable": "غير متاح لهذا النوع من الحسابات.",
+
+
+  // --- Edit Profile ---
+  "edit_profile_screen_title": "تعديل الملف الشخصي",
+  "message_update_profile_success": "تم تحديث الملف الشخصي بنجاح.",
+
+  // --- Edit Skills ---
+  "edit_skills_screen_title": "تعديل المهارات",
+  "label_skill_name": "اسم المهارة",
+  "label_skill_stage": "المستوى",
+  "stage_not_specified": "غير محدد",
+  "stage_beginner": "مبتدئ",
+  "stage_intermediate": "متوسط",
+  "stage_advanced": "متقدم",
+  "message_no_skills_available": "لا توجد مهارات متاحة للاختيار.",
+  "message_update_skills_success": "تم تحديث المهارات بنجاح.",
+
+  // --- My Applications ---
+  "my_applications_screen_title": "طلبات التوظيف الخاصة بي",
+  "message_no_applications": "لم تقدم على أي فرص بعد.",
+  "application_status": "الحالة: {status}",
+  "application_date": "تاريخ التقديم: {date}",
+  "application_notes": "ملاحظات المتقدم:",
+  "application_cv_path": "مسار السيرة الذاتية:",
+  "button_apply": "تقديم طلب",
+  "message_already_applied": "أنت مسجل بالفعل في هذه الوظيفة.",
+  "message_job_closed": "فرصة العمل هذه لم تعد تستقبل طلبات.",
+  "message_apply_success": "تم التقديم بنجاح!",
+  "message_apply_login_required": "الرجاء تسجيل الدخول للتقديم.",
+  "button_cancel_application": "إلغاء الطلب",
+  "message_cancel_application_success": "تم إلغاء الطلب بنجاح.",
+  "confirm_delete_application_title": "تأكيد الإلغاء",
+  "confirm_delete_application_content": "هل أنت متأكد أنك تريد إلغاء هذا الطلب؟",
+
+  // --- My Enrollments ---
+  "my_enrollments_screen_title": "تسجيلات الدورات الخاصة بي",
+  "message_no_enrollments": "لم تسجل في أي دورات بعد.",
+  "enrollment_status": "الحالة: {status}",
+  "enrollment_date": "تاريخ التسجيل: {date}",
+  "enrollment_completion_date": "تاريخ الإكمال: {date}",
+  "button_enroll": "التسجيل في الدورة",
+  "message_already_enrolled": "أنت مسجل بالفعل في هذه الدورة.",
+  "message_enroll_success": "تم التسجيل بنجاح!",
+  "message_enroll_login_required": "الرجاء تسجيل الدخول للتسجيل.",
+  "button_unenroll": "إلغاء التسجيل",
+  "message_unenroll_success": "تم إلغاء التسجيل بنجاح.",
+  "confirm_delete_enrollment_title": "تأكيد الإلغاء",
+  "confirm_delete_enrollment_content": "هل أنت متأكد أنك تريد إلغاء هذا التسجيل؟",
+
+
+  // --- Recommendations ---
+  "recommendations_screen_title": "التوصيات",
+  "recommended_jobs_title": "فرص العمل الموصى بها:",
+  "recommended_courses_title": "الدورات التدريبية الموصى بها:",
+  "message_no_job_recommendations": "لا توجد فرص عمل موصى بها حالياً.",
+  "message_no_course_recommendations": "لا توجد دورات موصى بها حالياً.",
+
+
+  // --- Public Resources ---
+  "articles_list_title": "المقالات",
+  "article_detail_title": "تفاصيل المقال",
+  "article_by": "بواسطة: {author}",
+  "article_publish_date": "تاريخ النشر: {date}",
+  "article_type": "النوع: {type}",
+  "article_photo": "صورة المقال",
+  "article_description": "الوصف:",
+  "message_no_article_description": "لا يوجد وصف متاح.",
+
+  "jobs_list_title": "فرص العمل والتدريب",
+  "job_detail_title": "تفاصيل الفرصة",
+  "job_type": "النوع: {type}",
+  "job_location": "المكان: {location}",
+  "job_publish_date": "تاريخ النشر: {date}",
+  "job_end_date": "آخر موعد للتقديم: {date}",
+  "job_qualifications": "المؤهلات المطلوبة:",
+  "message_no_qualifications_listed": "لم يتم تحديد مؤهلات.",
+  "job_required_skills": "المهارات المطلوبة:",
+  "message_no_required_skills_listed": "لم يتم تحديد مهارات.",
+  "job_poster": "الناشر: {poster}",
+
+
+  "courses_list_title": "الدورات التدريبية",
+  "course_detail_title": "تفاصيل الدورة",
+  "course_trainer": "المدرب: {trainer}",
+  "course_site": "المكان: {site}",
+  "course_training_site": "جهة التدريب: {provider}",
+  "course_stage": "المستوى: {stage}",
+  "course_certificate": "الشهادة: {certificate}",
+  "course_start_date": "تاريخ البدء: {date}",
+  "course_end_date": "تاريخ الانتهاء: {date}",
+  "course_enroll_link": "رابط التسجيل:",
+  "course_description": "الوصف:",
+  "message_no_course_description": "لا يوجد وصف متاح.",
+
+
+  "companies_list_title": "الشركات",
+  "company_detail_title": "تفاصيل الشركة",
+  "company_about": "عن الشركة:",
+  "company_email": "البريد الإلكتروني:",
+  "company_phone": "رقم الهاتف:",
+  "company_country": "الدولة:",
+  "company_city": "المدينة:",
+  "company_address": "العنوان المفصل:",
+  "company_website": "الموقع الإلكتروني:",
+  "company_media": "الوسائط:",
+  "message_no_company_description": "لا يوجد وصف متاح.",
+
+  "groups_list_title": "المجموعات",
+  "label_telegram_link": "رابط تيليجرام",
+  "message_no_group_link": "لا يوجد رابط لهذه المجموعة",
+
+
+  "skills_list_title": "المهارات",
+  "label_skill_id": "معرف المهارة",
+
+
+  // --- Role-Specific Endpoints ---
+  "managed_company_screen_title": "شركتي",
+  "managed_resources_title": "إدارة الموارد:",
+  "managed_jobs_list_title": "فرص عملي المنشورة",
+  "managed_courses_list_title": "دوراتي المنشورة",
+
+  // --- Admin Endpoints ---
+  "admin_users_list_title": "إدارة المستخدمين",
+  "admin_skills_list_title": "إدارة المهارات",
+  "admin_groups_list_title": "إدارة المجموعات",
+  "admin_companies_list_title": "إدارة الشركات",
+  "admin_articles_list_title": "إدارة المقالات",
+  "admin_jobs_list_title": "إدارة فرص العمل",
+  "admin_courses_list_title": "إدارة الدورات",
+  "admin_company_requests_title": "طلبات الشركات الجديدة",
+  "admin_users_title": "إدارة المستخدمين:",
+  "admin_requests_title": "الطلبات والمعلقات:",
+  "admin_user_detail_title": "تفاصيل المستخدم (الأدمن)",
+  "admin_company_detail_title": "تفاصيل الشركة (الأدمن)",
+  "admin_group_detail_title": "تفاصيل المجموعة (الأدمن)",
+  "admin_skill_detail_title": "تفاصيل المهارة (الأدمن)",
+  "admin_article_detail_title": "تفاصيل المقال (الأدمن)",
+  "admin_job_detail_title": "تفاصيل الوظيفة (الأدمن)",
+  "admin_course_detail_title": "تفاصيل الدورة (الأدمن)",
+
+
+  // --- Edit/Create Screens ---
+  "edit_user_title": "تعديل المستخدم",
+  "create_user_title": "إضافة مستخدم",
+  "edit_profile_title": "تعديل الملف الشخصي",
+  "edit_skills_title": "تعديل المهارات",
+  "edit_article_title": "تعديل مقال",
+  "create_article_title": "إضافة مقال",
+  "edit_job_title": "تعديل فرصة عمل",
+  "create_job_title": "إضافة فرصة عمل",
+  "edit_course_title": "تعديل دورة",
+  "create_course_title": "إضافة دورة",
+  "edit_company_title": "تعديل شركة",
+  "create_company_title": "إضافة شركة",
+  "edit_group_title": "تعديل مجموعة",
+  "create_group_title": "إضافة مجموعة",
+  "edit_skill_title": "تعديل مهارة",
+  "create_skill_title": "إضافة مهارة",
+
+
+  // --- Details & Specific Views ---
+  "applicant_detail_title": "تفاصيل المتقدم",
+  "enrollee_detail_title": "تفاصيل المسجل",
+  "applicant_info_title": "معلومات الطلب:",
+  "enrollee_info_title": "معلومات التسجيل:",
+  "applicant_user_info_title": "معلومات المتقدم (المستخدم):",
+  "enrollee_user_info_title": "معلومات المسجل (المستخدم):",
+  "applicant_profile_title": "الملف الشخصي للمتقدم:",
+  "enrollee_profile_title": "الملف الشخصي للمسجل:",
+  "applicant_skills_title": "مهارات المتقدم:",
+  "enrollee_skills_title": "مهارات المسجل:",
+  "label_application_id": "معرف الطلب:",
+  "label_enrollment_id": "معرف التسجيل:",
+  "label_applicant_notes": "ملاحظات المتقدم:",
+  "label_applicant_cv": "مسار السيرة الذاتية:",
+  "label_enrollee_completion_date": "تاريخ الإكمال:",
+   "message_no_applicant_notes": "لا توجد ملاحظات.",
+    "message_no_qualifications_listed": "لم يتم تحديد مؤهلات.",
+    "message_no_required_skills_listed": "لم يتم تحديد مهارات.",
+    "message_user_not_linked_to_company": "المستخدم غير مرتبط بشركة.",
+   "message_manager_info": "معلومات المدير:",
+    "message_trainer_info": "معلومات المدرب:",
+
+
+  // --- Confirmation Dialogs ---
+  "confirm_delete_title": "تأكيد الحذف",
+  "confirm_delete_skill_content": "هل أنت متأكد أنك تريد حذف هذه المهارة؟",
+  "confirm_delete_user_content": "هل أنت متأكد أنك تريد حذف المستخدم {username}؟",
+  "confirm_delete_group_content": "هل أنت متأكد أنك تريد حذف المجموعة التي رابطها \"{link}\"؟",
+  "confirm_delete_company_content": "هل أنت متأكد أنك تريد حذف الشركة \"{companyName}\"؟",
+  "confirm_delete_article_content": "هل أنت متأكد أنك تريد حذف المقال \"{articleTitle}\"؟",
+  "confirm_delete_job_content": "هل أنت متأكد أنك تريد حذف فرصة العمل \"{jobTitle}\"؟",
+  "confirm_delete_course_content": "هل أنت متأكد أنك تريد حذف الدورة \"{courseName}\"؟",
+
+
+  // --- Messages ---
+  "message_add_job_not_implemented": "وظيفة إضافة وظيفة لم تنفذ.",
+  "message_edit_job_not_implemented": "وظيفة تعديل وظيفة لم تنفذ.",
+  "message_delete_job_not_implemented": "وظيفة حذف وظيفة لم تنفذ.",
+  "message_add_course_not_implemented": "وظيفة إضافة دورة لم تنفذ.",
+  "message_edit_course_not_implemented": "وظيفة تعديل دورة لم تنفذ.",
+  "message_delete_course_not_implemented": "وظيفة حذف دورة لم تنفذ.",
+  "message_add_article_not_implemented": "وظيفة إضافة مقال لم تنفذ.",
+  "message_edit_article_not_implemented": "وظيفة تعديل مقال لم تنفذ.",
+  "message_delete_article_not_implemented": "وظيفة حذف مقال لم تنفذ.",
+  "message_add_skill_not_implemented": "وظيفة إضافة مهارة لم تنفذ.",
+  "message_edit_skill_not_implemented": "وظيفة تعديل مهارة لم تنفذ.",
+  "message_delete_skill_not_implemented": "وظيفة حذف مهارة لم تنفذ.",
+  "message_add_group_not_implemented": "وظيفة إضافة مجموعة لم تنفذ.",
+  "message_edit_group_not_implemented": "وظيفة تعديل مجموعة لم تنفذ.",
+  "message_delete_group_not_implemented": "وظيفة حذف مجموعة لم تنفذ.",
+  "message_add_company_not_implemented": "وظيفة إضافة شركة لم تنفذ.",
+  "message_edit_company_not_implemented": "وظيفة تعديل شركة لم تنفذ.",
+  "message_delete_company_not_implemented": "وظيفة حذف شركة لم تنفذ.",
+  "message_edit_profile_not_implemented": "وظيفة تعديل الملف الشخصي لم تنفذ.",
+  "message_edit_skills_not_implemented": "وظيفة تعديل المهارات لم تنفذ.",
+  "message_view_applicant_not_implemented": "وظيفة عرض تفاصيل المتقدم لم تنفذ.",
+  "message_update_status_not_implemented": "وظيفة تحديث الحالة لم تنفذ.",
+  "message_apply_button_not_implemented": "وظيفة زر التقديم لم تنفذ بالكامل بعد.",
+  "message_enroll_button_not_implemented": "وظيفة زر التسجيل لم تنفذ بالكامل بعد.",
+  "message_user_data_not_available": "بيانات المستخدم غير متوفرة.",
+  "message_job_id_not_available": "معرف الوظيفة غير متاح.",
+  "message_course_id_not_available": "معرف الدورة غير متاح.",
+  "message_company_id_not_available": "معرف الشركة غير متاح.",
+  "message_article_id_not_available": "معرف المقال غير متاح.",
+  "message_skill_id_not_available": "معرف المهارة غير متاح.",
+  "message_group_id_not_available": "معرف المجموعة غير متاح.",
+  "message_application_id_not_available": "معرف الطلب غير متاح.",
+  "message_enrollment_id_not_available": "معرف التسجيل غير متاح.",
+  "message_confirm_password_required": "الرجاء تأكيد كلمة المرور",
+  "message_email_format_invalid": "الرجاء إدخال بريد إلكتروني صالح",
+  "message_select_status": "الرجاء اختيار الحالة",
+  "message_select_type": "الرجاء اختيار النوع",
+  "message_end_date_after_start": "تاريخ الانتهاء يجب أن يكون بعد تاريخ البدء",
+  "message_enter_publisher_id": "الرجاء إدخال معرف الناشر",
+  "message_enter_valid_number": "الرجاء إدخال رقم صحيح",
+  "message_skill_name_required": "الرجاء إدخال اسم المهارة",
+  "message_telegram_link_required": "الرجاء إدخال رابط تيليجرام",
+  "message_company_name_required": "الرجاء إدخال اسم الشركة",
+  "message_user_id_required": "معرف المستخدم مطلوب",
+  "message_article_title_required": "الرجاء إدخال عنوان المقال",
+  "message_article_description_required": "الرجاء إدخال وصف المقال",
+  "message_publish_date_required": "الرجاء اختيار تاريخ النشر",
+  "message_job_title_required": "الرجاء إدخال المسمى الوظيفي",
+  "message_job_description_required": "الرجاء إدخال وصف الوظيفة",
+  "message_course_name_required": "الرجاء إدخال اسم الدورة",
+  "message_enroll_link_required": "الرجاء إدخال رابط التسجيل",
+  "message_website_link_required": "الرجاء إدخال رابط الموقع الإلكتروني",
+  "message_publisher_id_required_admin": "معرف الناشر مطلوب للأدمن.",
+  "message_manager_id_required_admin": "معرف المدير مطلوب للأدمن.",
+  "message_select_date": "الرجاء اختيار تاريخ",
+  "message_invalid_url_format": "الرجاء إدخال رابط صالح",
+  "message_select_level": "الرجاء اختيار المستوى",
+  "message_select_certificate_status": "الرجاء اختيار حالة الشهادة",
+  "message_select_location": "الرجاء اختيار المكان",
+  "message_no_group_details": "تفاصيل المجموعة غير متاحة.",
+  "message_no_company_details": "تفاصيل الشركة غير متاحة.",
+  "message_no_skill_details": "تفاصيل المهارة غير متاحة.",
+  "message_no_article_details": "تفاصيل المقال غير متاحة.",
+  "message_no_job_details": "تفاصيل فرصة العمل غير متاحة.",
+  "message_no_course_details": "تفاصيل الدورة غير متاحة.",
+  "message_enrollee_details_not_available": "تفاصيل المسجل غير متاحة.",
+  "message_applicant_details_not_available": "تفاصيل المتقدم غير متاحة.",
+
+  "message_user_name_not_available": "اسم المستخدم غير متاح",
+  "message_email_not_available": "البريد الإلكتروني غير متاح",
+
+
+  "message_invalid_data_format": "تنسيق البيانات غير صحيح.",
+  "message_server_error": "خطأ في الخادم.",
+  "message_network_error": "خطأ في الشبكة.",
+  "message_unknown_error": "خطأ غير معروف.",
+  "message_operation_failed": "فشلت العملية.",
+
+   "message_applied_via_seeder": "تم التقديم عبر البيانات الأولية.",
+   "message_no_applicant_cv": "لا يوجد مسار للسيرة الذاتية.",
+   "message_no_applicant_phone": "رقم الهاتف غير متاح.",
+   "message_no_applicant_email": "البريد الإلكتروني غير متاح.",
+   "message_no_applicant_profile": "الملف الشخصي غير متاح.",
+    "message_applicant_status_update_success": "تم تحديث حالة المتقدم بنجاح.",
+     "confirm_update_applicant_status_title": "تأكيد تحديث الحالة",
+      "confirm_update_applicant_status_content": "هل أنت متأكد أنك تريد تغيير حالة هذا الطلب إلى \"{status}\"؟",
+       "@confirm_update_applicant_status_content": {
+         "description": "Confirmation message for updating applicant status",
+         "placeholders": {
+           "status": { "type": "String" }
+         }
+       },
+       "label_applicant_user_id": "معرف المستخدم المتقدم:",
+
+
+    "message_enrolled_via_seeder": "تم التسجيل عبر البيانات الأولية.",
+    "message_no_enrollee_completion_date": "لم يتم تحديد تاريخ إكمال.",
+    "message_no_enrollee_phone": "رقم الهاتف غير متاح.",
+    "message_no_enrollee_email": "البريد الإلكتروني غير متاح.",
+    "message_no_enrollee_profile": "الملف الشخصي غير متاح.",
+    "message_enrollee_status_update_success": "تم تحديث حالة المسجل بنجاح.",
+     "confirm_update_enrollee_status_title": "تأكيد تحديث الحالة",
+      "confirm_update_enrollee_status_content": "هل أنت متأكد أنك تريد تغيير حالة هذا التسجيل إلى \"{status}\"؟",
+       "@confirm_update_enrollee_status_content": {
+         "description": "Confirmation message for updating enrollee status",
+         "placeholders": {
+           "status": { "type": "String" }
+         }
+       },
+        "label_enrollee_user_id": "معرف المستخدم المسجل:",
+
+
+   "message_no_users_for_selection": "لا يوجد مستخدمون متاحون للاختيار.",
+   "label_select_user": "اختيار المستخدم",
+    "label_select_manager": "اختيار المدير",
+
+
+  "label_publisher_user_id": "معرف الناشر (UserID):", # For Jobs/Courses
+  "label_author_user_id": "معرف المؤلف (UserID):", # For Articles
+  "label_manager_user_id": "معرف المدير (UserID):", # For Company
+
+  "label_company_status": "حالة الشركة:",
+
+  "message_company_approved_success": "تمت الموافقة على الشركة بنجاح.",
+  "message_company_rejected_success": "تم رفض الشركة بنجاح.",
+  "message_approve_failed": "فشل الموافقة:",
+  "message_reject_failed": "فشل الرفض:",
+  "confirm_approve_company_title": "تأكيد الموافقة",
+  "confirm_approve_company_content": "هل أنت متأكد أنك تريد الموافقة على شركة \"{companyName}\"؟",
+   "@confirm_approve_company_content": {
+     "description": "Confirmation for approving company request",
+     "placeholders": {
+       "companyName": { "type": "String" }
+     }
+   },
+   "confirm_reject_company_title": "تأكيد الرفض",
+   "confirm_reject_company_content": "هل أنت متأكد أنك تريد رفض شركة \"{companyName}\"؟",
+    "@confirm_reject_company_content": {
+      "description": "Confirmation for rejecting company request",
+      "placeholders": {
+        "companyName": { "type": "String" }
+      }
+    },
+
+    "message_no_pending_requests": "لا توجد طلبات معلقة حالياً.",
+    "request_submitted_by": "مقدم الطلب: {managerName}",
+     "@request_submitted_by": {
+       "description": "Submitted by manager name",
+       "placeholders": {
+         "managerName": { "type": "String" }
+       }
+     },
+
+    "message_select_image": "اختيار صورة", # For photo upload
+    "message_image_upload_failed": "فشل تحميل الصورة.", # For photo upload
+
+    "label_old_password": "كلمة المرور القديمة",
+    "label_new_password": "كلمة المرور الجديدة",
+    "label_confirm_new_password": "تأكيد كلمة المرور الجديدة",
+    "button_change_password": "تغيير كلمة المرور",
+    "message_password_change_success": "تم تغيير كلمة المرور بنجاح.",
+     "message_password_change_failed": "فشل تغيير كلمة المرور:",
+     "confirm_change_password_title": "تأكيد تغيير كلمة المرور",
+      "confirm_change_password_content": "هل أنت متأكد أنك تريد تغيير كلمة المرور؟",
+
+
+     "message_no_jobs_published": "لم يتم نشر أي فرص عمل.",
+     "message_no_courses_published": "لم يتم نشر أي دورات.",
+      "message_no_articles_published": "لم يتم نشر أي مقالات.",
+      "message_no_companies_listed": "لا توجد شركات متاحة.",
+      "message_no_groups_listed": "لا توجد مجموعات متاحة.",
+      "message_no_skills_listed": "لا توجد مهارات متاحة.",
+
+      "message_company_associated_user_id": "UserID المدير المرتبط: {userId}",
+       "@message_company_associated_user_id": {
+         "description": "Displays User ID associated with a company",
+         "placeholders": {
+           "userId": { "type": "String" }
+         }
+       },
+
+       "message_article_author_user_id": "UserID المؤلف: {userId}",
+       "@message_article_author_user_id": {
+         "description": "Displays User ID of an article's author",
+         "placeholders": {
+           "userId": { "type": "String" }
+         }
+       },
+
+       "message_job_publisher_user_id": "UserID الناشر: {userId}",
+       "@message_job_publisher_user_id": {
+         "description": "Displays User ID of a job's publisher",
+         "placeholders": {
+           "userId": { "type": "String" }
+         }
+       },
+
+        "message_course_creator_user_id": "UserID الناشر: {userId}",
+       "@message_course_creator_user_id": {
+         "description": "Displays User ID of a course's creator",
+         "placeholders": {
+           "userId": { "type": "String" }
+         }
+       },
+
+       "message_applicant_user_id": "UserID المتقدم: {userId}",
+       "@message_applicant_user_id": {
+         "description": "Displays User ID of an applicant",
+         "placeholders": {
+           "userId": { "type": "String" }
+         }
+       },
+        "message_enrollee_user_id": "UserID المسجل: {userId}",
+       "@message_enrollee_user_id": {
+         "description": "Displays User ID of an enrollee",
+         "placeholders": {
+           "userId": { "type": "String" }
+         }
+       },
+
+       "message_company_status": "الحالة: {status}",
+        "@message_company_status": {
+          "description": "Displays company status",
+          "placeholders": {
+            "status": { "type": "String" }
+          }
+        }
+
+
+}

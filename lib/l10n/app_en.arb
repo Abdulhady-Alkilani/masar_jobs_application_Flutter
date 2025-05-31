@@ -1,0 +1,499 @@
+{
+  "@@locale": "en",
+  "appTitle": "Masar Jobs App",
+
+  // --- General ---
+  "loading": "Loading...",
+  "error": "Error",
+  "ok": "OK",
+  "cancel": "Cancel",
+  "add": "Add",
+  "edit": "Edit",
+  "delete": "Delete",
+  "save": "Save",
+  "search": "Search",
+  "no_data_available": "No data available.",
+  "unexpected_error": "An unexpected error occurred.",
+  "status": "Status",
+  "type": "Type",
+
+  // --- Authentication ---
+  "login_screen_title": "Login",
+  "register_screen_title": "Create Account",
+  "button_login": "Login",
+  "button_register": "Create Account",
+  "button_logout": "Logout",
+  "prompt_no_account": "Don't have an account? Register now",
+  "prompt_has_account": "Already have an account? Login",
+  "label_email": "Email",
+  "label_password": "Password",
+  "label_password_confirm": "Confirm Password",
+  "label_first_name": "First Name",
+  "label_last_name": "Last Name",
+  "label_username": "Username",
+  "label_phone": "Phone (Optional)",
+  "label_account_type": "Account Type",
+  "error_email_required": "Please enter your email",
+  "error_password_required": "Please enter your password",
+  "error_first_name_required": "Please enter your first name",
+  "error_last_name_required": "Please enter your last name",
+  "error_username_required": "Please enter your username",
+  "error_password_mismatch": "Passwords do not match",
+  "error_select_account_type": "Please select an account type",
+  "error_validation": "Validation Error",
+  "error_unauthenticated": "Unauthenticated.",
+  "error_unauthorized": "Unauthorized.",
+  "error_not_found": "Not Found.",
+  "error_conflict": "Conflict.",
+  "error_bad_request": "Bad Request.",
+  "message_login_success": "Login successful",
+  "message_register_success": "Account created successfully!",
+  "message_logout_success": "Successfully logged out",
+  "message_user_not_authenticated": "User not authenticated.",
+
+  // --- Home Screen ---
+  "home_screen_title": "Home",
+  "welcome_message": "Welcome, {userName}!",
+    "@welcome_message": {
+        "description": "Welcome message for the user",
+        "placeholders": {
+            "userName": {
+                "type": "String"
+            }
+        }
+    },
+  "account_type": "Account Type: {type}",
+   "@account_type": {
+     "description": "Displays the user's account type",
+     "placeholders": {
+       "type": {
+         "type": "String"
+       }
+     }
+   },
+  "profile_section_title": "My Profile",
+  "user_specific_sections_title": "My Sections:",
+  "public_resources_sections_title": "Public Resources:",
+
+  // --- User Profile ---
+  "profile_screen_title": "My Profile",
+  "profile_data_title": "Profile Data:",
+  "user_data_title": "Basic User Data:",
+  "label_university": "University",
+  "label_gpa": "GPA",
+  "label_personal_description": "Personal Description",
+  "label_technical_description": "Technical Description",
+  "label_git_link": "GitHub Link",
+  "message_no_profile_data": "No profile data available.",
+  "message_no_skills_added": "No skills added yet.",
+  "button_edit_profile": "Edit Profile",
+  "button_edit_skills": "Edit Skills",
+   "message_profile_not_applicable": "Not available for this account type.",
+
+  // --- Edit Profile ---
+  "edit_profile_screen_title": "Edit Profile",
+  "message_update_profile_success": "Profile updated successfully.",
+
+  // --- Edit Skills ---
+  "edit_skills_screen_title": "Edit Skills",
+  "label_skill_name": "Skill Name",
+  "label_skill_stage": "Stage",
+  "stage_not_specified": "Not Specified",
+  "stage_beginner": "Beginner",
+  "stage_intermediate": "Intermediate",
+  "stage_advanced": "Advanced",
+  "message_no_skills_available": "No skills available for selection.",
+  "message_update_skills_success": "Skills updated successfully.",
+
+  // --- My Applications ---
+  "my_applications_screen_title": "My Job Applications",
+  "message_no_applications": "You haven't applied for any jobs yet.",
+  "application_status": "Status: {status}",
+    "@application_status": {
+        "description": "Status of a job application",
+        "placeholders": {
+            "status": { "type": "String" }
+        }
+    },
+  "application_date": "Applied On: {date}",
+    "@application_date": {
+        "description": "Date of job application",
+        "placeholders": {
+            "date": { "type": "String" }
+        }
+    },
+  "application_notes": "My Notes:",
+  "application_cv_path": "CV Path:",
+  "button_apply": "Apply",
+  "message_already_applied": "You have already applied for this job.",
+  "message_job_closed": "This job opportunity is no longer accepting applications.",
+  "message_apply_success": "Applied successfully!",
+  "message_apply_login_required": "Please log in to apply.",
+  "button_cancel_application": "Cancel Application",
+  "message_cancel_application_success": "Application cancelled successfully.",
+  "confirm_delete_application_title": "Confirm Cancellation",
+  "confirm_delete_application_content": "Are you sure you want to cancel this application?",
+
+  // --- My Enrollments ---
+  "my_enrollments_screen_title": "My Course Enrollments",
+  "message_no_enrollments": "You haven't enrolled in any courses yet.",
+  "enrollment_status": "Status: {status}",
+    "@enrollment_status": {
+        "description": "Status of a course enrollment",
+        "placeholders": {
+            "status": { "type": "String" }
+        }
+    },
+  "enrollment_date": "Enrolled On: {date}",
+    "@enrollment_date": {
+        "description": "Date of course enrollment",
+        "placeholders": {
+            "date": { "type": "String" }
+        }
+    },
+  "enrollment_completion_date": "Completed On: {date}",
+   "@enrollment_completion_date": {
+        "description": "Date course was completed",
+        "placeholders": {
+            "date": { "type": "String" }
+        }
+    },
+  "button_enroll": "Enroll",
+  "message_already_enrolled": "You are already enrolled in this course.",
+  "message_enroll_success": "Enrolled successfully!",
+  "message_enroll_login_required": "Please log in to enroll.",
+  "button_unenroll": "Unenroll",
+  "message_unenroll_success": "Enrollment cancelled successfully.",
+  "confirm_delete_enrollment_title": "Confirm Cancellation",
+  "confirm_delete_enrollment_content": "Are you sure you want to cancel this enrollment?",
+
+
+  // --- Recommendations ---
+  "recommendations_screen_title": "Recommendations",
+  "recommended_jobs_title": "Recommended Jobs:",
+  "recommended_courses_title": "Recommended Courses:",
+  "message_no_job_recommendations": "No job recommendations available.",
+  "message_no_course_recommendations": "No course recommendations available.",
+
+  // --- Public Resources ---
+  "articles_list_title": "Articles",
+  "article_detail_title": "Article Details",
+  "article_by": "By: {author}",
+   "@article_by": {
+     "description": "Author of an article",
+     "placeholders": {
+       "author": { "type": "String" }
+     }
+   },
+  "article_publish_date": "Published On: {date}",
+   "@article_publish_date": {
+     "description": "Publish date of an article",
+     "placeholders": {
+       "date": { "type": "String" }
+     }
+   },
+  "article_type": "Type: {type}",
+    "@article_type": {
+      "description": "Type of article",
+      "placeholders": {
+        "type": { "type": "String" }
+      }
+    },
+  "article_photo": "Article Photo",
+  "article_description": "Description:",
+  "message_no_article_description": "No description available.",
+  "jobs_list_title": "Job & Training Opportunities",
+  "job_detail_title": "Opportunity Details",
+  "job_type": "Type: {type}",
+   "@job_type": {
+     "description": "Type of job opportunity (job or training)",
+     "placeholders": {
+       "type": { "type": "String" }
+     }
+   },
+  "job_location": "Location: {location}",
+   "@job_location": {
+     "description": "Location of the job",
+     "placeholders": {
+       "location": { "type": "String" }
+     }
+   },
+  "job_publish_date": "Published On: {date}",
+   "@job_publish_date": {
+     "description": "Publish date of job opportunity",
+     "placeholders": {
+       "date": { "type": "String" }
+     }
+   },
+  "job_end_date": "Deadline: {date}",
+   "@job_end_date": {
+     "description": "Application deadline",
+     "placeholders": {
+       "date": { "type": "String" }
+     }
+   },
+  "job_qualifications": "Qualifications:",
+  "message_no_qualifications": "No qualifications listed.",
+  "job_required_skills": "Required Skills:",
+  "message_no_required_skills": "No skills listed.",
+  "job_poster": "Poster: {poster}",
+   "@job_poster": {
+     "description": "User who posted the job",
+     "placeholders": {
+       "poster": { "type": "String" }
+     }
+   },
+  "courses_list_title": "Training Courses",
+  "course_detail_title": "Course Details",
+  "course_trainer": "Trainer: {trainer}",
+    "@course_trainer": {
+      "description": "Name of the course trainer",
+      "placeholders": {
+        "trainer": { "type": "String" }
+      }
+    },
+  "course_site": "Location: {site}",
+   "@course_site": {
+     "description": "Location of the course (online/in-person)",
+     "placeholders": {
+       "site": { "type": "String" }
+     }
+   },
+  "course_training_site": "Training Provider: {provider}",
+   "@course_training_site": {
+     "description": "Training provider organization",
+     "placeholders": {
+       "provider": { "type": "String" }
+     }
+   },
+  "course_stage": "Level: {stage}",
+   "@course_stage": {
+     "description": "Level of the course (beginner/intermediate/advanced)",
+     "placeholders": {
+       "stage": { "type": "String" }
+     }
+   },
+  "course_certificate": "Certificate: {certificate}",
+   "@course_certificate": {
+     "description": "Indicates if a certificate is provided",
+     "placeholders": {
+       "certificate": { "type": "String" }
+     }
+   },
+  "course_start_date": "Start Date: {date}",
+   "@course_start_date": {
+     "description": "Start date of the course",
+     "placeholders": {
+       "date": { "type": "String" }
+     }
+   },
+  "course_end_date": "End Date: {date}",
+   "@course_end_date": {
+     "description": "End date of the course",
+     "placeholders": {
+       "date": { "type": "String" }
+     }
+   },
+  "course_enroll_link": "Enroll Link:",
+  "course_description": "Description:",
+  "message_no_course_description": "No description available.",
+  "companies_list_title": "Companies",
+  "company_detail_title": "Company Details",
+  "company_about": "About Company:",
+  "company_email": "Email:",
+  "company_phone": "Phone:",
+  "company_country": "Country:",
+  "company_city": "City:",
+  "company_address": "Detailed Address:",
+  "company_website": "Website:",
+  "company_media": "Media:",
+  "message_no_company_description": "No description available.",
+  "groups_list_title": "Groups",
+  "label_telegram_link": "Telegram Link",
+  "message_no_group_link": "No link for this group",
+  "skills_list_title": "Skills",
+
+  // --- Role-Specific Endpoints ---
+  "managed_company_screen_title": "My Company",
+  "managed_resources_title": "Managed Resources:",
+  "managed_jobs_list_title": "My Job Postings",
+  "managed_courses_list_title": "My Courses",
+
+  // --- Admin Endpoints ---
+  "admin_users_list_title": "Manage Users",
+  "admin_skills_list_title": "Manage Skills",
+  "admin_groups_list_title": "Manage Groups",
+  "admin_companies_list_title": "Manage Companies",
+  "admin_articles_list_title": "Manage Articles",
+  "admin_jobs_list_title": "Manage Jobs",
+  "admin_courses_list_title": "Manage Courses",
+  "admin_company_requests_title": "New Company Requests",
+  "admin_users_title": "Users Management:",
+  "admin_requests_title": "Requests & Pending Items:",
+  "admin_user_detail_title": "User Details",
+  "admin_company_detail_title": "Company Details (Admin)",
+  "admin_group_detail_title": "Group Details (Admin)",
+  "admin_skill_detail_title": "Skill Details (Admin)",
+  "admin_article_detail_title": "Article Details (Admin)",
+  "admin_job_detail_title": "Job Details (Admin)",
+  "admin_course_detail_title": "Course Details (Admin)",
+
+
+  // --- Edit/Create Screens ---
+  "edit_user_title": "Edit User",
+  "create_user_title": "Create User",
+  "edit_profile_title": "Edit Profile",
+  "edit_skills_title": "Edit Skills",
+  "edit_article_title": "Edit Article",
+  "create_article_title": "Create Article",
+  "edit_job_title": "Edit Job",
+  "create_job_title": "Create Job",
+  "edit_course_title": "Edit Course",
+  "create_course_title": "Create Course",
+  "edit_company_title": "Edit Company",
+  "create_company_title": "Create Company",
+  "edit_group_title": "Edit Group",
+  "create_group_title": "Create Group",
+  "edit_skill_title": "Edit Skill",
+  "create_skill_title": "Create Skill",
+
+
+  // --- Details & Specific Views ---
+  "applicant_detail_title": "Applicant Details",
+  "enrollee_detail_title": "Enrollee Details",
+  "applicant_info_title": "Application Info:",
+  "enrollee_info_title": "Enrollment Info:",
+  "applicant_user_info_title": "Applicant Info (User):",
+  "enrollee_user_info_title": "Enrollee Info (User):",
+  "applicant_profile_title": "Applicant Profile:",
+  "enrollee_profile_title": "Enrollee Profile:",
+  "applicant_skills_title": "Applicant Skills:",
+  "enrollee_skills_title": "Enrollee Skills:",
+  "label_application_id": "Application ID:",
+  "label_enrollment_id": "Enrollment ID:",
+  "label_applicant_notes": "Applicant Notes:",
+  "label_applicant_cv": "Applicant CV:",
+  "label_enrollee_completion_date": "Completion Date:",
+
+
+  // --- Confirmation Dialogs ---
+  "confirm_delete_title": "Confirm Delete",
+  "confirm_delete_skill_content": "Are you sure you want to delete this skill?",
+  "confirm_delete_user_content": "Are you sure you want to delete the user {username}?",
+    "@confirm_delete_user_content": {
+      "description": "Confirmation message before deleting a user",
+      "placeholders": {
+        "username": { "type": "String" }
+      }
+    },
+   "confirm_delete_group_content": "Are you sure you want to delete the group with link \"{link}\"?",
+     "@confirm_delete_group_content": {
+       "description": "Confirmation message before deleting a group",
+       "placeholders": {
+         "link": { "type": "String" }
+       }
+     },
+   "confirm_delete_company_content": "Are you sure you want to delete the company \"{companyName}\"?",
+      "@confirm_delete_company_content": {
+        "description": "Confirmation message before deleting a company",
+        "placeholders": {
+          "companyName": { "type": "String" }
+        }
+      },
+    "confirm_delete_article_content": "Are you sure you want to delete the article \"{articleTitle}\"?",
+       "@confirm_delete_article_content": {
+         "description": "Confirmation message before deleting an article",
+         "placeholders": {
+           "articleTitle": { "type": "String" }
+         }
+       },
+    "confirm_delete_job_content": "Are you sure you want to delete the job opportunity \"{jobTitle}\"?",
+       "@confirm_delete_job_content": {
+         "description": "Confirmation message before deleting a job opportunity",
+         "placeholders": {
+           "jobTitle": { "type": "String" }
+         }
+       },
+    "confirm_delete_course_content": "Are you sure you want to delete the course \"{courseName}\"?",
+       "@confirm_delete_course_content": {
+         "description": "Confirmation message before deleting a training course",
+         "placeholders": {
+           "courseName": { "type": "String" }
+         }
+       },
+
+  // --- Messages ---
+  "message_add_job_not_implemented": "Add Job function not implemented.",
+  "message_edit_job_not_implemented": "Edit Job function not implemented.",
+  "message_delete_job_not_implemented": "Delete Job function not implemented.",
+  "message_add_course_not_implemented": "Add Course function not implemented.",
+  "message_edit_course_not_implemented": "Edit Course function not implemented.",
+  "message_delete_course_not_implemented": "Delete Course function not implemented.",
+  "message_add_article_not_implemented": "Add Article function not implemented.",
+  "message_edit_article_not_implemented": "Edit Article function not implemented.",
+  "message_delete_article_not_implemented": "Delete Article function not implemented.",
+  "message_add_skill_not_implemented": "Add Skill function not implemented.",
+  "message_edit_skill_not_implemented": "Edit Skill function not implemented.",
+  "message_delete_skill_not_implemented": "Delete Skill function not implemented.",
+  "message_add_group_not_implemented": "Add Group function not implemented.",
+  "message_edit_group_not_implemented": "Edit Group function not implemented.",
+  "message_delete_group_not_implemented": "Delete Group function not implemented.",
+  "message_add_company_not_implemented": "Add Company function not implemented.",
+  "message_edit_company_not_implemented": "Edit Company function not implemented.",
+  "message_delete_company_not_implemented": "Delete Company function not implemented.",
+  "message_edit_profile_not_implemented": "Edit Profile function not implemented.",
+  "message_edit_skills_not_implemented": "Edit Skills function not implemented.",
+  "message_view_applicant_not_implemented": "View Applicant details function not implemented.",
+  "message_update_status_not_implemented": "Update status function not implemented.",
+   "message_apply_button_not_implemented": "Apply button function not implemented.",
+   "message_enroll_button_not_implemented": "Enroll button function not implemented.",
+   "message_user_data_not_available": "User data not available.",
+   "message_job_id_not_available": "Job ID not available.",
+   "message_course_id_not_available": "Course ID not available.",
+   "message_company_id_not_available": "Company ID not available.",
+   "message_article_id_not_available": "Article ID not available.",
+   "message_skill_id_not_available": "Skill ID not available.",
+   "message_group_id_not_available": "Group ID not available.",
+    "message_application_id_not_available": "Application ID not available.",
+   "message_enrollment_id_not_available": "Enrollment ID not available.",
+   "message_confirm_password_required": "Please confirm your password",
+   "message_email_format_invalid": "Please enter a valid email address",
+   "message_select_status": "Please select a status",
+   "message_select_type": "Please select a type",
+   "message_end_date_after_start": "End date must be after start date",
+   "message_enter_publisher_id": "Please enter publisher UserID",
+   "message_enter_valid_number": "Please enter a valid number",
+   "message_skill_name_required": "Please enter skill name",
+    "message_telegram_link_required": "Please enter Telegram link",
+    "message_company_name_required": "Please enter company name",
+    "message_user_id_required": "User ID is required",
+    "message_article_title_required": "Please enter article title",
+    "message_article_description_required": "Please enter article description",
+    "message_publish_date_required": "Please select a publish date",
+    "message_job_title_required": "Please enter job title",
+    "message_job_description_required": "Please enter job description",
+    "message_course_name_required": "Please enter course name",
+    "message_enroll_link_required": "Please enter enroll link", # Example - check API validation
+    "message_website_link_required": "Please enter website link", # Example - check API validation
+    "message_publisher_id_required_admin": "Publisher UserID is required for Admin.",
+    "message_manager_id_required_admin": "Manager UserID is required for Admin.",
+     "message_select_date": "Please select a date",
+      "message_invalid_url_format": "Please enter a valid URL",
+      "message_select_level": "Please select a level",
+      "message_select_certificate_status": "Please select certificate status",
+      "message_select_location": "Please select location",
+      "message_no_group_details": "Group details not available.",
+       "message_no_company_details": "Company details not available.",
+        "message_no_skill_details": "Skill details not available.",
+         "message_no_article_details": "Article details not available.",
+          "message_no_job_details": "Job details not available.",
+           "message_no_course_details": "Course details not available.",
+            "message_enrollee_details_not_available": "Enrollee details not available.",
+             "message_applicant_details_not_available": "Applicant details not available.",
+              "message_no_applicant_notes": "No applicant notes.",
+               "message_no_qualifications_listed": "No qualifications listed.",
+               "message_no_required_skills_listed": "No required skills listed.",
+               "message_user_not_linked_to_company": "User not linked to a company.",
+               "message_manager_info": "Manager Info:"
+
+}
