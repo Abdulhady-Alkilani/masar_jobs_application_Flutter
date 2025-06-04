@@ -19,83 +19,114 @@ class PublicJobOpportunityProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  Future<void> fetchJobOpportunities() async {
+  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<JobOpportunity>
+  List<JobOpportunity> _convertDynamicListToJobOpportunityList(List<dynamic>? data) {
+    if (data == null) return [];
+    List<JobOpportunity> jobList = [];
+    for (final item in data) {
+      if (item is Map<String, dynamic>) {
+        try {
+          jobList.add(JobOpportunity.fromJson(item));
+        } catch (e) {
+          print('Error parsing individual JobOpportunity item: $e for item $item');
+        }
+      } else {
+        print('Skipping unexpected item type in JobOpportunity list: $item');
+      }
+    }
+    return jobList;
+  }
+
+  // جلب أول صفحة من فرص العمل العامة
+  Future<void> fetchJobOpportunities({int page = 1}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final paginatedResponse = await _apiService.fetchJobOpportunities(page: 1);
-      print(paginatedResponse);
-      _jobs.addAll((paginatedResponse.data ?? []) as Iterable<JobOpportunity>);
+      // هذا المسار عام لا يتطلب توكن
+      final paginatedResponse = await _apiService.fetchJobOpportunities(page: page);
+
+      // استخدم التابع المساعد للتحويل الآمن
+      _jobs = _convertDynamicListToJobOpportunityList(paginatedResponse.data);
+
+
       _currentPage = paginatedResponse.currentPage ?? 1;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
       _error = e.message;
+      print('API Exception during fetchPublicJobOpportunities: ${e.toString()}');
     } catch (e) {
       _error = 'Failed to load jobs: ${e.toString()}';
+      print('Unexpected error during fetchPublicJobOpportunities: ${e.toString()}');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  // جلب الصفحات التالية من فرص العمل العامة
   Future<void> fetchMoreJobOpportunities() async {
     if (!hasMorePages || _isFetchingMore) return;
 
     _isFetchingMore = true;
-    _error = null;
+    // _error = null; // قد لا تريد مسح الخطأ هنا
     notifyListeners();
 
     try {
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchJobOpportunities(page: nextPage);
-      print(paginatedResponse);
-      _jobs.addAll((paginatedResponse.data ?? []) as Iterable<JobOpportunity>);
+
+      // استخدم التابع المساعد للتحويل الآمن للإضافة
+      _jobs.addAll(_convertDynamicListToJobOpportunityList(paginatedResponse.data));
+
+
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
-      print('Error fetching more jobs: ${e.message}');
+      print('API Exception during fetchMorePublicJobOpportunities: ${e.message}');
     } catch (e) {
-      print('Unexpected error fetching more jobs: ${e.toString()}');
+      print('Unexpected error during fetchMorePublicJobOpportunities: ${e.toString()}');
     } finally {
       _isFetchingMore = false;
       notifyListeners();
     }
   }
 
+  // جلب تفاصيل فرصة عمل محددة (من القائمة المحملة أو API العام)
   Future<JobOpportunity?> fetchJobOpportunity(int jobId) async {
+    // حاول إيجاد الوظيفة في القائمة المحملة حالياً
     final existingJob = _jobs.firstWhereOrNull((job) => job.jobId == jobId);
-    print(existingJob);
     if (existingJob != null) {
       return existingJob;
     }
 
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    // إذا لم توجد في القائمة، اذهب لجلبه من API العام
+    // لا نغير حالة التحميل الرئيسية هنا، يمكن استخدام حالة تحميل منفصلة إذا لزم الأمر
+    // setState(() { _isFetchingSingleJob = true; }); notifyListeners();
 
     try {
       final job = await _apiService.fetchJobOpportunity(jobId);
-      print(job);
+      // لا تضيفه للقائمة لتجنب تكرار العناصر أو خلط صفحات
       return job;
     } on ApiException catch (e) {
-      _error = e.message;
+      print('API Exception during fetchSinglePublicJobOpportunity: ${e.message}');
+      _error = e.message; // يمكن تعيين الخطأ العام
       return null;
     } catch (e) {
-      _error = 'Failed to load job: ${e.toString()}';
+      print('Unexpected error during fetchSinglePublicJobOpportunity: ${e.toString()}');
+      _error = 'Failed to load job details: ${e.toString()}';
       return null;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      // setState(() { _isFetchingSingleJob = false; }); notifyListeners();
     }
   }
 }
 
 // Simple extension for List<JobOpportunity>
-extension ListJobExtension on List<JobOpportunity> {
+extension ListJobOpportunityExtension on List<JobOpportunity> {
   JobOpportunity? firstWhereOrNull(bool Function(JobOpportunity) test) {
     for (var element in this) {
       if (test(element)) return element;

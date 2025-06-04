@@ -585,6 +585,64 @@ class ApiService {
   }
 
   // --- 6. Admin Endpoints ---
+  /// جلب مهارة واحدة بواسطة الأدمن
+  /// يرسل طلب GET إلى /admin/skills/{skillId}
+  Future<Skill> fetchSingleSkillAdmin(String token, int skillId) async {
+    final response = await _get('/admin/skills/$skillId', token: token);
+    // يجب أن يعيد المتحكم بيانات المهارة في حالة النجاح (200 OK)
+    return Skill.fromJson(_handleResponse(response));
+  }
+
+  /// جلب مجموعة واحدة بواسطة الأدمن
+  /// يرسل طلب GET إلى /admin/groups/{groupId}
+  Future<Group> fetchSingleGroupAdmin(String token, int groupId) async {
+    final response = await _get('/admin/groups/$groupId', token: token);
+    // يجب أن يعيد المتحكم بيانات المجموعة في حالة النجاح (200 OK)
+    return Group.fromJson(_handleResponse(response));
+  }
+
+  /// جلب شركة واحدة بواسطة الأدمن
+  /// يرسل طلب GET إلى /admin/companies/{companyId}
+  Future<Company> fetchSingleCompanyAdmin(String token, int companyId) async {
+    final response = await _get('/admin/companies/$companyId', token: token);
+    // يجب أن يعيد المتحكم بيانات الشركة في حالة النجاح (200 OK)
+    return Company.fromJson(_handleResponse(response));
+  }
+
+  /// جلب فرصة عمل واحدة بواسطة الأدمن
+  /// يرسل طلب GET إلى /admin/jobs/{jobId}
+  Future<JobOpportunity> fetchSingleJobAdmin(String token, int jobId) async {
+    final response = await _get('/admin/jobs/$jobId', token: token);
+    // يجب أن يعيد المتحكم بيانات فرصة العمل في حالة النجاح (200 OK)
+    return JobOpportunity.fromJson(_handleResponse(response));
+  }
+
+  /// جلب دورة تدريبية واحدة بواسطة الأدمن
+  /// يرسل طلب GET إلى /admin/courses/{courseId}
+  Future<TrainingCourse> fetchSingleCourseAdmin(String token, int courseId) async {
+    final response = await _get('/admin/courses/$courseId', token: token);
+    // يجب أن يعيد المتحكم بيانات الدورة في حالة النجاح (200 OK)
+    return TrainingCourse.fromJson(_handleResponse(response));
+  }
+
+
+
+  /// جلب مقال واحد بواسطة الأدمن
+  /// يرسل طلب GET إلى /admin/articles/{articleId}
+  Future<Article> fetchSingleArticleAdmin(String token, int articleId) async {
+    final response = await _get('/admin/articles/$articleId', token: token);
+    // يجب أن يعيد المتحكم بيانات المقال في حالة النجاح (200 OK)
+    return Article.fromJson(_handleResponse(response));
+  }
+
+
+  /// جلب مستخدم واحد بواسطة الأدمن
+  /// يرسل طلب GET إلى /admin/users/{userId}
+  Future<User> fetchSingleUserAdmin(String token, int userId) async {
+    final response = await _get('/admin/users/$userId', token: token);
+    // يجب أن يعيد المتحكم بيانات المستخدم في حالة النجاح (200 OK)
+    return User.fromJson(_handleResponse(response));
+  }
 
   /// جلب جميع المستخدمين (للأدمن)
   Future<PaginatedResponse<User>> fetchAllUsers(String token, {int page = 1}) async {

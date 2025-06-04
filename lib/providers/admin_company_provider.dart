@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
+
 class AdminCompanyProvider extends ChangeNotifier {
   List<Company> _companies = [];
   bool _isLoading = false;
@@ -21,7 +22,26 @@ class AdminCompanyProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // جلب جميع الشركات (للأدمن)
+  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<Company>
+  List<Company> _convertDynamicListToCompanyList(List<dynamic>? data) {
+    if (data == null) return [];
+    List<Company> companyList = [];
+    for (final item in data) {
+      if (item is Map<String, dynamic>) {
+        try {
+          companyList.add(Company.fromJson(item));
+        } catch (e) {
+          print('Error parsing individual Company item: $e for item $item');
+        }
+      } else {
+        print('Skipping unexpected item type in Company list: $item');
+      }
+    }
+    return companyList;
+  }
+
+
+  // جلب جميع الشركات (للأدمن) - الصفحة الأولى
   Future<void> fetchAllCompanies(BuildContext context) async {
     _isLoading = true;
     _error = null;
@@ -30,28 +50,37 @@ class AdminCompanyProvider extends ChangeNotifier {
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token == null) throw ApiException(401, 'User not authenticated.');
+      // Optional: check user type is Admin
 
       final paginatedResponse = await _apiService.fetchAllCompaniesAdmin(token!, page: 1);
-      print(paginatedResponse);
-      _companies.addAll((paginatedResponse.data ?? []) as Iterable<Company>);
+      // print('Fetched initial admin companies response: $paginatedResponse'); // Debug print
+
+
+      // استخدم التابع المساعد للتحويل الآمن
+      _companies = _convertDynamicListToCompanyList(paginatedResponse.data);
+
+
       _currentPage = paginatedResponse.currentPage ?? 1;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
       _error = e.message;
+      print('API Exception during fetchAllCompaniesAdmin: ${e.toString()}');
     } catch (e) {
       _error = 'Failed to load companies: ${e.toString()}';
+      print('Unexpected error during fetchAllCompaniesAdmin: ${e.toString()}');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  // جلب الصفحات التالية من الشركات
   Future<void> fetchMoreCompanies(BuildContext context) async {
     if (!hasMorePages || _isFetchingMore) return;
 
     _isFetchingMore = true;
-    _error = null;
+    // _error = null; // قد لا تريد مسح الخطأ هنا
     notifyListeners();
 
     try {
@@ -60,18 +89,54 @@ class AdminCompanyProvider extends ChangeNotifier {
 
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchAllCompaniesAdmin(token, page: nextPage);
-      print(paginatedResponse);
-      _companies.addAll((paginatedResponse.data ?? []) as Iterable<Company>);
+
+      // استخدم التابع المساعد للتحويل الآمن للإضافة
+      _companies.addAll(_convertDynamicListToCompanyList(paginatedResponse.data));
+
+
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
-      print('Error fetching more companies: ${e.message}');
+      print('API Exception during fetchMoreAdminCompanies: ${e.message}');
     } catch (e) {
-      print('Unexpected error fetching more companies: ${e.toString()}');
+      print('Unexpected error during fetchMoreAdminCompanies: ${e.toString()}');
     } finally {
       _isFetchingMore = false;
       notifyListeners();
+    }
+  }
+
+  // جلب شركة واحدة بواسطة الأدمن (لشاشة التفاصيل)
+  Future<Company?> fetchSingleCompany(BuildContext context, int companyId) async {
+    // حاول إيجاد الشركة في القائمة المحملة حالياً
+    final existingCompany = _companies.firstWhereOrNull((company) => company.companyId == companyId);
+    if (existingCompany != null) {
+      return existingCompany;
+    }
+
+    // إذا لم توجد في القائمة، اذهب لجلبه من API
+    // لا نغير حالة التحميل الرئيسية هنا، يمكن استخدام حالة تحميل منفصلة
+    // setState(() { _isFetchingSingleCompany = true; }); notifyListeners();
+
+    try {
+      final token = Provider.of<AuthProvider>(context, listen: false).token;
+      if (token == null) throw ApiException(401, 'User not authenticated.');
+
+      final company = await _apiService.fetchSingleCompanyAdmin(token, companyId);
+      // لا تضيفه للقائمة هنا
+
+      return company;
+    } on ApiException catch (e) {
+      print('API Exception during fetchSingleAdminCompany: ${e.message}');
+      _error = e.message; // يمكن تعيين الخطأ العام
+      return null;
+    } catch (e) {
+      print('Unexpected error during fetchSingleAdminCompany: ${e.toString()}');
+      _error = 'Failed to load company details: ${e.toString()}';
+      return null;
+    } finally {
+      // setState(() { _isFetchingSingleCompany = false; }); notifyListeners();
     }
   }
 
@@ -87,9 +152,9 @@ class AdminCompanyProvider extends ChangeNotifier {
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
       final newCompany = await _apiService.createCompanyAdmin(token, companyData);
-      print(newCompany);
+      // print('Created new company: $newCompany'); // Debug print
 
-      _companies.insert(0, newCompany); // أضف في البداية (أحدث)
+      _companies.insert(0, newCompany); // أضف في البداية
 
     } on ApiException catch (e) {
       _error = e.message;
@@ -114,12 +179,14 @@ class AdminCompanyProvider extends ChangeNotifier {
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
       final updatedCompany = await _apiService.updateCompanyAdmin(token, companyId, companyData);
-      print(updatedCompany);
+      // print('Updated company: $updatedCompany'); // Debug print
 
+      // العثور على الشركة في القائمة المحلية وتحديثها
       final index = _companies.indexWhere((company) => company.companyId == companyId);
       if (index != -1) {
         _companies[index] = updatedCompany;
       } else {
+        // إذا لم يتم العثور عليها، قم بإعادة جلب القائمة
         fetchAllCompanies(context);
       }
 

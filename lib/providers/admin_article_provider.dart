@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
+
 class AdminArticleProvider extends ChangeNotifier {
   List<Article> _articles = [];
   bool _isLoading = false;
@@ -21,7 +22,26 @@ class AdminArticleProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // جلب جميع المقالات (للأدمن)
+  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<Article>
+  List<Article> _convertDynamicListToArticleList(List<dynamic>? data) {
+    if (data == null) return [];
+    List<Article> articleList = [];
+    for (final item in data) {
+      if (item is Map<String, dynamic>) {
+        try {
+          articleList.add(Article.fromJson(item));
+        } catch (e) {
+          print('Error parsing individual Article item: $e for item $item');
+        }
+      } else {
+        print('Skipping unexpected item type in Article list: $item');
+      }
+    }
+    return articleList;
+  }
+
+
+  // جلب جميع المقالات (للأدمن) - الصفحة الأولى
   Future<void> fetchAllArticles(BuildContext context) async {
     _isLoading = true;
     _error = null;
@@ -30,28 +50,36 @@ class AdminArticleProvider extends ChangeNotifier {
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token == null) throw ApiException(401, 'User not authenticated.');
+      // Optional: check user type is Admin
 
       final paginatedResponse = await _apiService.fetchAllArticlesAdmin(token!, page: 1);
-      print(paginatedResponse);
-      _articles.addAll((paginatedResponse.data ?? []) as Iterable<Article>);
+      // print('Fetched initial admin articles response: $paginatedResponse'); // Debug print
+
+      // استخدم التابع المساعد للتحويل الآمن
+      _articles = _convertDynamicListToArticleList(paginatedResponse.data);
+
+
       _currentPage = paginatedResponse.currentPage ?? 1;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
       _error = e.message;
+      print('API Exception during fetchAllArticlesAdmin: ${e.toString()}');
     } catch (e) {
       _error = 'Failed to load articles: ${e.toString()}';
+      print('Unexpected error during fetchAllArticlesAdmin: ${e.toString()}');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  // جلب الصفحات التالية من المقالات
   Future<void> fetchMoreArticles(BuildContext context) async {
     if (!hasMorePages || _isFetchingMore) return;
 
     _isFetchingMore = true;
-    _error = null;
+    // _error = null; // قد لا تريد مسح الخطأ هنا
     notifyListeners();
 
     try {
@@ -60,20 +88,58 @@ class AdminArticleProvider extends ChangeNotifier {
 
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchAllArticlesAdmin(token, page: nextPage);
-      print(paginatedResponse);
-      _articles.addAll((paginatedResponse.data ?? []) as Iterable<Article>);
+      // print('Fetched more admin articles response: $paginatedResponse'); // Debug print
+
+      // استخدم التابع المساعد للتحويل الآمن للإضافة
+      _articles.addAll(_convertDynamicListToArticleList(paginatedResponse.data));
+
+
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
-      print('Error fetching more articles: ${e.message}');
+      print('API Exception during fetchMoreAdminArticles: ${e.message}');
     } catch (e) {
-      print('Unexpected error fetching more articles: ${e.toString()}');
+      print('Unexpected error during fetchMoreAdminArticles: ${e.toString()}');
     } finally {
       _isFetchingMore = false;
       notifyListeners();
     }
   }
+
+  // جلب مقال واحد بواسطة الأدمن (لشاشة التفاصيل)
+  Future<Article?> fetchSingleArticle(BuildContext context, int articleId) async {
+    // حاول إيجاد المقال في القائمة المحملة حالياً
+    final existingArticle = _articles.firstWhereOrNull((article) => article.articleId == articleId);
+    if (existingArticle != null) {
+      return existingArticle;
+    }
+
+    // إذا لم يوجد في القائمة، اذهب لجلبه من API
+    // لا نغير حالة التحميل الرئيسية هنا
+    // setState(() { _isFetchingSingleArticle = true; }); notifyListeners();
+
+    try {
+      final token = Provider.of<AuthProvider>(context, listen: false).token;
+      if (token == null) throw ApiException(401, 'User not authenticated.');
+
+      final article = await _apiService.fetchSingleArticleAdmin(token, articleId);
+      // لا تضيفه للقائمة هنا
+
+      return article;
+    } on ApiException catch (e) {
+      print('API Exception during fetchSingleAdminArticle: ${e.message}');
+      _error = e.message; // يمكن تعيين الخطأ العام
+      return null;
+    } catch (e) {
+      print('Unexpected error during fetchSingleAdminArticle: ${e.toString()}');
+      _error = 'Failed to load article details: ${e.toString()}';
+      return null;
+    } finally {
+      // setState(() { _isFetchingSingleArticle = false; }); notifyListeners();
+    }
+  }
+
 
   // إنشاء مقال (بواسطة الأدمن)
   Future<void> createArticle(BuildContext context, Map<String, dynamic> articleData) async {
@@ -86,9 +152,9 @@ class AdminArticleProvider extends ChangeNotifier {
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
       final newArticle = await _apiService.createArticleAdmin(token, articleData);
-      print(newArticle);
+      // print('Created new article: $newArticle'); // Debug print
 
-      _articles.insert(0, newArticle);
+      _articles.insert(0, newArticle); // أضف المقال الجديد في بداية القائمة
 
     } on ApiException catch (e) {
       _error = e.message;
@@ -113,13 +179,15 @@ class AdminArticleProvider extends ChangeNotifier {
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
       final updatedArticle = await _apiService.updateArticleAdmin(token, articleId, articleData);
-      print(updatedArticle);
+      // print('Updated article: $updatedArticle'); // Debug print
 
+      // العثور على المقال في القائمة المحلية وتحديثه
       final index = _articles.indexWhere((article) => article.articleId == articleId);
       if (index != -1) {
         _articles[index] = updatedArticle;
       } else {
-        fetchAllArticles(context);
+        // إذا لم يتم العثور على المقال في القائمة المحلية (ربما في صفحة أخرى لم يتم جلبها)، قم بإعادة جلب القائمة
+        fetchAllArticles(context); // إعادة جلب لتحديث القائمة المعروضة
       }
 
     } on ApiException catch (e) {
@@ -146,6 +214,7 @@ class AdminArticleProvider extends ChangeNotifier {
 
       await _apiService.deleteArticleAdmin(token, articleId);
 
+      // إزالة المقال من القائمة المحلية
       _articles.removeWhere((article) => article.articleId == articleId);
 
     } on ApiException catch (e) {
@@ -162,7 +231,7 @@ class AdminArticleProvider extends ChangeNotifier {
 }
 
 // Simple extension for List<Article>
-extension ListAdminArticleExtension on List<Article> {
+extension ListConsultantArticleExtension on List<Article> {
   Article? firstWhereOrNull(bool Function(Article) test) {
     for (var element in this) {
       if (test(element)) return element;

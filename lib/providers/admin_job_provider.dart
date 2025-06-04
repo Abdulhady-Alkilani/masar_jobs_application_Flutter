@@ -21,7 +21,26 @@ class AdminJobProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // جلب جميع فرص العمل (للأدمن)
+  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<JobOpportunity>
+  List<JobOpportunity> _convertDynamicListToJobOpportunityList(List<dynamic>? data) {
+    if (data == null) return [];
+    List<JobOpportunity> jobList = [];
+    for (final item in data) {
+      if (item is Map<String, dynamic>) {
+        try {
+          jobList.add(JobOpportunity.fromJson(item));
+        } catch (e) {
+          print('Error parsing individual JobOpportunity item: $e for item $item');
+        }
+      } else {
+        print('Skipping unexpected item type in JobOpportunity list: $item');
+      }
+    }
+    return jobList;
+  }
+
+
+  // جلب جميع فرص العمل (للأدمن) - الصفحة الأولى
   Future<void> fetchAllJobs(BuildContext context) async {
     _isLoading = true;
     _error = null;
@@ -30,28 +49,36 @@ class AdminJobProvider extends ChangeNotifier {
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token == null) throw ApiException(401, 'User not authenticated.');
+      // Optional: check user type is Admin
 
       final paginatedResponse = await _apiService.fetchAllJobsAdmin(token!, page: 1);
-      print(paginatedResponse);
-      _jobs.addAll((paginatedResponse.data ?? []) as Iterable<JobOpportunity>);
+      // print('Fetched initial admin jobs response: $paginatedResponse'); // Debug print
+
+      // استخدم التابع المساعد للتحويل الآمن
+      _jobs = _convertDynamicListToJobOpportunityList(paginatedResponse.data);
+
+
       _currentPage = paginatedResponse.currentPage ?? 1;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
       _error = e.message;
+      print('API Exception during fetchAllJobsAdmin: ${e.toString()}');
     } catch (e) {
       _error = 'Failed to load jobs: ${e.toString()}';
+      print('Unexpected error during fetchAllJobsAdmin: ${e.toString()}');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  // جلب الصفحات التالية من فرص العمل
   Future<void> fetchMoreJobs(BuildContext context) async {
     if (!hasMorePages || _isFetchingMore) return;
 
     _isFetchingMore = true;
-    _error = null;
+    // _error = null; // قد لا تريد مسح الخطأ هنا
     notifyListeners();
 
     try {
@@ -60,20 +87,58 @@ class AdminJobProvider extends ChangeNotifier {
 
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchAllJobsAdmin(token, page: nextPage);
-      print(paginatedResponse);
-      _jobs.addAll((paginatedResponse.data ?? []) as Iterable<JobOpportunity>);
+      // print('Fetched more admin jobs response: $paginatedResponse'); // Debug print
+
+      // استخدم التابع المساعد للتحويل الآمن للإضافة
+      _jobs.addAll(_convertDynamicListToJobOpportunityList(paginatedResponse.data));
+
+
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
-      print('Error fetching more jobs: ${e.message}');
+      print('API Exception during fetchMoreAdminJobs: ${e.message}');
     } catch (e) {
-      print('Unexpected error fetching more jobs: ${e.toString()}');
+      print('Unexpected error during fetchMoreAdminJobs: ${e.toString()}');
     } finally {
       _isFetchingMore = false;
       notifyListeners();
     }
   }
+
+  // جلب فرصة عمل واحدة بواسطة الأدمن (لشاشة التفاصيل)
+  Future<JobOpportunity?> fetchSingleJob(BuildContext context, int jobId) async {
+    // حاول إيجاد الوظيفة في القائمة المحملة حالياً
+    final existingJob = _jobs.firstWhereOrNull((job) => job.jobId == jobId);
+    if (existingJob != null) {
+      return existingJob;
+    }
+
+    // إذا لم يوجد في القائمة، اذهب لجلبه من API
+    // لا نغير حالة التحميل الرئيسية هنا
+    // setState(() { _isFetchingSingleJob = true; }); notifyListeners();
+
+    try {
+      final token = Provider.of<AuthProvider>(context, listen: false).token;
+      if (token == null) throw ApiException(401, 'User not authenticated.');
+
+      final job = await _apiService.fetchSingleJobAdmin(token, jobId);
+      // لا تضيفه للقائمة هنا
+
+      return job;
+    } on ApiException catch (e) {
+      print('API Exception during fetchSingleAdminJob: ${e.message}');
+      _error = e.message; // يمكن تعيين الخطأ العام
+      return null;
+    } catch (e) {
+      print('Unexpected error during fetchSingleAdminJob: ${e.toString()}');
+      _error = 'Failed to load job details: ${e.toString()}';
+      return null;
+    } finally {
+      // setState(() { _isFetchingSingleJob = false; }); notifyListeners();
+    }
+  }
+
 
   // إنشاء فرصة عمل (بواسطة الأدمن)
   Future<void> createJob(BuildContext context, Map<String, dynamic> jobData) async {
@@ -86,9 +151,9 @@ class AdminJobProvider extends ChangeNotifier {
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
       final newJob = await _apiService.createJobAdmin(token, jobData);
-      print(newJob);
+      // print('Created new job: $newJob'); // Debug print
 
-      _jobs.insert(0, newJob);
+      _jobs.insert(0, newJob); // أضف الوظيفة الجديدة في بداية القائمة
 
     } on ApiException catch (e) {
       _error = e.message;
@@ -113,13 +178,16 @@ class AdminJobProvider extends ChangeNotifier {
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
       final updatedJob = await _apiService.updateJobAdmin(token, jobId, jobData);
-      print(updatedJob);
+      // print('Updated job: $updatedJob'); // Debug print
 
+
+      // العثور على الوظيفة في القائمة المحلية وتحديثها
       final index = _jobs.indexWhere((job) => job.jobId == jobId);
       if (index != -1) {
         _jobs[index] = updatedJob;
       } else {
-        fetchAllJobs(context);
+        // إذا لم يتم العثور على الوظيفة في القائمة المحلية (ربما في صفحة أخرى لم يتم جلبها)، قم بإعادة جلب القائمة
+        fetchAllJobs(context); // إعادة جلب لتحديث القائمة المعروضة
       }
 
     } on ApiException catch (e) {
@@ -146,6 +214,7 @@ class AdminJobProvider extends ChangeNotifier {
 
       await _apiService.deleteJobAdmin(token, jobId);
 
+      // إزالة الوظيفة من القائمة المحلية
       _jobs.removeWhere((job) => job.jobId == jobId);
 
     } on ApiException catch (e) {
@@ -162,7 +231,7 @@ class AdminJobProvider extends ChangeNotifier {
 }
 
 // Simple extension for List<JobOpportunity>
-extension ListAdminJobExtension on List<JobOpportunity> {
+extension ListJobOpportunityExtension on List<JobOpportunity> {
   JobOpportunity? firstWhereOrNull(bool Function(JobOpportunity) test) {
     for (var element in this) {
       if (test(element)) return element;

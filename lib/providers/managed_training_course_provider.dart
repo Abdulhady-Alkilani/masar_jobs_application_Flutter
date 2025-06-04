@@ -19,7 +19,27 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
   bool get isFetchingMore => _isFetchingMore;
   bool get hasMorePages => _lastPage == null || _currentPage < _lastPage!;
 
+
   final ApiService _apiService = ApiService();
+
+  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<TrainingCourse>
+  List<TrainingCourse> _convertDynamicListToTrainingCourseList(List<dynamic>? data) {
+    if (data == null) return [];
+    List<TrainingCourse> courseList = [];
+    for (final item in data) {
+      if (item is Map<String, dynamic>) {
+        try {
+          courseList.add(TrainingCourse.fromJson(item));
+        } catch (e) {
+          print('Error parsing individual TrainingCourse item: $e for item $item');
+        }
+      } else {
+        print('Skipping unexpected item type in TrainingCourse list: $item');
+      }
+    }
+    return courseList;
+  }
+
 
   // جلب الدورات التي نشرها المستخدم (المدير أو الاستشاري)
   Future<void> fetchManagedCourses(BuildContext context) async {
@@ -29,22 +49,29 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
 
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
-      // Optional: check if user is manager or consultant
+      if (token == null) throw ApiException(401, 'User not authenticated.');
+      // Optional: check user type is manager or consultant
       // final userType = Provider.of<AuthProvider>(context, listen: false).user?.type;
       // if (token == null || !['مدير شركة', 'خبير استشاري'].contains(userType)) {
       //    throw ApiException(403, 'User not authorized to manage courses.');
       // }
 
       final paginatedResponse = await _apiService.fetchManagedCourses(token!, page: 1);
-      print(paginatedResponse);
-      _managedCourses.addAll((paginatedResponse.data ?? []) as Iterable<TrainingCourse>);
+      // print('Fetched initial managed courses response: $paginatedResponse'); // Debug print
+
+      // استخدم التابع المساعد للتحويل الآمن
+      _managedCourses = _convertDynamicListToTrainingCourseList(paginatedResponse.data);
+
+
       _currentPage = paginatedResponse.currentPage ?? 1;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
       _error = e.message;
+      print('API Exception during fetchManagedCourses: ${e.toString()}');
     } catch (e) {
       _error = 'Failed to load managed courses: ${e.toString()}';
+      print('Unexpected error during fetchManagedCourses: ${e.toString()}');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -55,7 +82,7 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
     if (!hasMorePages || _isFetchingMore) return;
 
     _isFetchingMore = true;
-    _error = null;
+    // _error = null; // قد لا تريد مسح الخطأ هنا
     notifyListeners();
 
     try {
@@ -64,23 +91,34 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
 
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchManagedCourses(token, page: nextPage);
-      print(paginatedResponse);
-      _managedCourses.addAll((paginatedResponse.data ?? []) as Iterable<TrainingCourse>);
+
+      // استخدم التابع المساعد للتحويل الآمن للإضافة
+      _managedCourses.addAll(_convertDynamicListToTrainingCourseList(paginatedResponse.data));
+
+
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
-      print('Error fetching more managed courses: ${e.message}');
+      print('API Exception during fetchMoreManagedCourses: ${e.message}');
     } catch (e) {
-      print('Unexpected error fetching more courses: ${e.toString()}');
+      print('Unexpected error during fetchMoreManagedCourses: ${e.toString()}');
     } finally {
       _isFetchingMore = false;
       notifyListeners();
     }
   }
 
+  // جلب تفاصيل دورة تدريبية محددة (من القائمة المحملة)
+  Future<TrainingCourse?> fetchCourseOpportunity(int courseId) async {
+    // حاول إيجاد الدورة في القائمة المحملة حالياً
+    final existingCourse = _managedCourses.firstWhereOrNull((course) => course.courseId == courseId);
+    // لا تذهب لـ API لجلب عنصر فردي في هذا Provider، فقط من القائمة المحملة
+    return existingCourse;
+  }
 
-  // إنشاء دورة جديدة بواسطة المستخدم (المدير أو الاستشاري)
+
+  // إنشاء دورة تدريبية جديدة بواسطة المستخدم (المدير أو الاستشاري)
   Future<void> createCourse(BuildContext context, Map<String, dynamic> courseData) async {
     _isLoading = true;
     _error = null;
@@ -91,9 +129,9 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
       final newCourse = await _apiService.createManagedCourse(token, courseData);
-      print(newCourse);
+      // print('Created new course: $newCourse'); // Debug print
 
-      _managedCourses.insert(0, newCourse);
+      _managedCourses.insert(0, newCourse); // أضف الدورة الجديدة في بداية القائمة
 
     } on ApiException catch (e) {
       _error = e.message;
@@ -107,7 +145,7 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
     }
   }
 
-  // تحديث دورة بواسطة المستخدم (المدير أو الاستشاري)
+  // تحديث دورة تدريبية بواسطة المستخدم (المدير أو الاستشاري)
   Future<void> updateCourse(BuildContext context, int courseId, Map<String, dynamic> courseData) async {
     _isLoading = true;
     _error = null;
@@ -118,13 +156,15 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
       final updatedCourse = await _apiService.updateManagedCourse(token, courseId, courseData);
-      print(updatedCourse);
+      // print('Updated course: $updatedCourse'); // Debug print
 
+      // العثور على الدورة في القائمة المحلية وتحديثها
       final index = _managedCourses.indexWhere((course) => course.courseId == courseId);
       if (index != -1) {
         _managedCourses[index] = updatedCourse;
       } else {
-        fetchManagedCourses(context);
+        // إذا لم يتم العثور على الدورة في القائمة المحلية (ربما في صفحة أخرى لم يتم جلبها)، قم بإعادة جلب القائمة
+        fetchManagedCourses(context); // إعادة جلب لتحديث القائمة المعروضة
       }
 
     } on ApiException catch (e) {
@@ -139,7 +179,7 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
     }
   }
 
-  // حذف دورة بواسطة المستخدم (المدير أو الاستشاري)
+  // حذف دورة تدريبية بواسطة المستخدم (المدير أو الاستشاري)
   Future<void> deleteCourse(BuildContext context, int courseId) async {
     _isLoading = true;
     _error = null;
@@ -151,6 +191,7 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
 
       await _apiService.deleteManagedCourse(token, courseId);
 
+      // إزالة الدورة من القائمة المحلية
       _managedCourses.removeWhere((course) => course.courseId == courseId);
 
     } on ApiException catch (e) {
@@ -167,7 +208,7 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
 }
 
 // Simple extension for List<TrainingCourse>
-extension ListManagedCourseExtension on List<TrainingCourse> {
+extension ListTrainingCourseExtension on List<TrainingCourse> {
   TrainingCourse? firstWhereOrNull(bool Function(TrainingCourse) test) {
     for (var element in this) {
       if (test(element)) return element;

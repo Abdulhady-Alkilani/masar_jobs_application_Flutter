@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
+
 class ManagedJobOpportunityProvider extends ChangeNotifier {
   List<JobOpportunity> _managedJobs = [];
   bool _isLoading = false;
@@ -21,6 +22,25 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
+  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<JobOpportunity>
+  List<JobOpportunity> _convertDynamicListToJobOpportunityList(List<dynamic>? data) {
+    if (data == null) return [];
+    List<JobOpportunity> jobList = [];
+    for (final item in data) {
+      if (item is Map<String, dynamic>) {
+        try {
+          jobList.add(JobOpportunity.fromJson(item));
+        } catch (e) {
+          print('Error parsing individual JobOpportunity item: $e for item $item');
+        }
+      } else {
+        print('Skipping unexpected item type in JobOpportunity list: $item');
+      }
+    }
+    return jobList;
+  }
+
+
   // جلب فرص العمل التي نشرها المدير
   Future<void> fetchManagedJobs(BuildContext context) async {
     _isLoading = true;
@@ -29,22 +49,29 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
 
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
-      // Optional: check if user is manager
+      if (token == null) throw ApiException(401, 'User not authenticated.');
+      // Optional: check user type is manager
       // final userType = Provider.of<AuthProvider>(context, listen: false).user?.type;
       // if (token == null || userType != 'مدير شركة') {
       //    throw ApiException(403, 'User not authorized to manage jobs.');
       // }
 
       final paginatedResponse = await _apiService.fetchManagedJobs(token!, page: 1);
-      print(paginatedResponse);
-      _managedJobs.addAll((paginatedResponse.data ?? []) as Iterable<JobOpportunity>);
+      // print('Fetched initial managed jobs response: $paginatedResponse'); // Debug print
+
+      // استخدم التابع المساعد للتحويل الآمن
+      _managedJobs = _convertDynamicListToJobOpportunityList(paginatedResponse.data);
+
+
       _currentPage = paginatedResponse.currentPage ?? 1;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
       _error = e.message;
+      print('API Exception during fetchManagedJobs: ${e.toString()}');
     } catch (e) {
       _error = 'Failed to load managed jobs: ${e.toString()}';
+      print('Unexpected error during fetchManagedJobs: ${e.toString()}');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -55,36 +82,46 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
     if (!hasMorePages || _isFetchingMore) return;
 
     _isFetchingMore = true;
-    _error = null;
+    // _error = null; // قد لا تريد مسح الخطأ هنا
     notifyListeners();
 
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token == null) {
-        // This should ideally not happen if checkAuthStatus is done correctly
         throw ApiException(401, 'User not authenticated.');
       }
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchManagedJobs(token, page: nextPage);
-      print(paginatedResponse);
-      _managedJobs.addAll((paginatedResponse.data ?? []) as Iterable<JobOpportunity>);
+
+      // استخدم التابع المساعد للتحويل الآمن للإضافة
+      _managedJobs.addAll(_convertDynamicListToJobOpportunityList(paginatedResponse.data));
+
+
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
-      print('Error fetching more managed jobs: ${e.message}');
+      print('API Exception during fetchMoreManagedJobs: ${e.message}');
     } catch (e) {
-      print('Unexpected error fetching more managed jobs: ${e.toString()}');
+      print('Unexpected error during fetchMoreManagedJobs: ${e.toString()}');
     } finally {
       _isFetchingMore = false;
       notifyListeners();
     }
   }
 
+  // جلب تفاصيل فرصة عمل محددة (من القائمة المحملة)
+  Future<JobOpportunity?> fetchJobOpportunity(int jobId) async {
+    // حاول إيجاد الوظيفة في القائمة المحملة حالياً
+    final existingJob = _managedJobs.firstWhereOrNull((job) => job.jobId == jobId);
+    // لا تذهب لـ API لجلب عنصر فردي في هذا Provider، فقط من القائمة المحملة
+    return existingJob;
+  }
+
 
   // إنشاء فرصة عمل جديدة بواسطة المدير
   Future<void> createJob(BuildContext context, Map<String, dynamic> jobData) async {
-    _isLoading = true; // Or separate loading state
+    _isLoading = true;
     _error = null;
     notifyListeners();
 
@@ -93,10 +130,9 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
       final newJob = await _apiService.createManagedJob(token, jobData);
-      print(newJob);
+      // print('Created new job: $newJob'); // Debug print
 
-      // إضافة الوظيفة الجديدة للقائمة (أو إعادة جلب القائمة)
-      _managedJobs.insert(0, newJob); // أضف في البداية كأحدث عنصر
+      _managedJobs.insert(0, newJob); // أضف الوظيفة الجديدة في بداية القائمة
 
     } on ApiException catch (e) {
       _error = e.message;
@@ -112,7 +148,7 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
 
   // تحديث فرصة عمل بواسطة المدير
   Future<void> updateJob(BuildContext context, int jobId, Map<String, dynamic> jobData) async {
-    _isLoading = true; // Or separate loading state
+    _isLoading = true;
     _error = null;
     notifyListeners();
 
@@ -121,15 +157,15 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
       final updatedJob = await _apiService.updateManagedJob(token, jobId, jobData);
-      print(updatedJob);
+      // print('Updated job: $updatedJob'); // Debug print
 
-      // تحديث العنصر في القائمة المحلية
+      // العثور على الوظيفة في القائمة المحلية وتحديثها
       final index = _managedJobs.indexWhere((job) => job.jobId == jobId);
       if (index != -1) {
         _managedJobs[index] = updatedJob;
       } else {
-        // إذا لم يتم العثور عليه (مثال: تم تحديث شيء في صفحة أخرى)، قم بإعادة جلب القائمة
-        fetchManagedJobs(context);
+        // إذا لم يتم العثور على الوظيفة في القائمة المحلية (ربما في صفحة أخرى لم يتم جلبها)، قم بإعادة جلب القائمة
+        fetchManagedJobs(context); // إعادة جلب لتحديث القائمة المعروضة
       }
 
     } on ApiException catch (e) {
@@ -146,7 +182,7 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
 
   // حذف فرصة عمل بواسطة المدير
   Future<void> deleteJob(BuildContext context, int jobId) async {
-    _isLoading = true; // Or separate loading state
+    _isLoading = true;
     _error = null;
     notifyListeners();
 
@@ -156,7 +192,7 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
 
       await _apiService.deleteManagedJob(token, jobId);
 
-      // إزالة العنصر من القائمة المحلية
+      // إزالة الوظيفة من القائمة المحلية
       _managedJobs.removeWhere((job) => job.jobId == jobId);
 
     } on ApiException catch (e) {
@@ -173,7 +209,7 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
 }
 
 // Simple extension for List<JobOpportunity>
-extension ListManagedJobExtension on List<JobOpportunity> {
+extension ListJobOpportunityExtension on List<JobOpportunity> {
   JobOpportunity? firstWhereOrNull(bool Function(JobOpportunity) test) {
     for (var element in this) {
       if (test(element)) return element;

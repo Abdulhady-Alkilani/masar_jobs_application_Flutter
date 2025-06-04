@@ -19,83 +19,115 @@ class PublicTrainingCourseProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  Future<void> fetchTrainingCourses() async {
+  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<TrainingCourse>
+  List<TrainingCourse> _convertDynamicListToTrainingCourseList(List<dynamic>? data) {
+    if (data == null) return [];
+    List<TrainingCourse> courseList = [];
+    for (final item in data) {
+      if (item is Map<String, dynamic>) {
+        try {
+          courseList.add(TrainingCourse.fromJson(item));
+        } catch (e) {
+          print('Error parsing individual TrainingCourse item: $e for item $item');
+        }
+      } else {
+        print('Skipping unexpected item type in TrainingCourse list: $item');
+      }
+    }
+    return courseList;
+  }
+
+
+  // جلب أول صفحة من الدورات العامة
+  Future<void> fetchTrainingCourses({int page = 1}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final paginatedResponse = await _apiService.fetchTrainingCourses(page: 1);
-      print(paginatedResponse);
-      _courses.addAll((paginatedResponse.data ?? []) as Iterable<TrainingCourse>);
+      // هذا المسار عام لا يتطلب توكن
+      final paginatedResponse = await _apiService.fetchTrainingCourses(page: page);
+
+      // استخدم التابع المساعد للتحويل الآمن
+      _courses = _convertDynamicListToTrainingCourseList(paginatedResponse.data);
+
+
       _currentPage = paginatedResponse.currentPage ?? 1;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
       _error = e.message;
+      print('API Exception during fetchPublicTrainingCourses: ${e.toString()}');
     } catch (e) {
       _error = 'Failed to load courses: ${e.toString()}';
+      print('Unexpected error during fetchPublicTrainingCourses: ${e.toString()}');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  // جلب الصفحات التالية من الدورات العامة
   Future<void> fetchMoreTrainingCourses() async {
     if (!hasMorePages || _isFetchingMore) return;
 
     _isFetchingMore = true;
-    _error = null;
+    // _error = null; // قد لا تريد مسح الخطأ هنا
     notifyListeners();
 
     try {
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchTrainingCourses(page: nextPage);
-      print(paginatedResponse);
-      _courses.addAll((paginatedResponse.data ?? []) as Iterable<TrainingCourse>);
+
+      // استخدم التابع المساعد للتحويل الآمن للإضافة
+      _courses.addAll(_convertDynamicListToTrainingCourseList(paginatedResponse.data));
+
+
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
-      print('Error fetching more courses: ${e.message}');
+      print('API Exception during fetchMorePublicTrainingCourses: ${e.message}');
     } catch (e) {
-      print('Unexpected error fetching more courses: ${e.toString()}');
+      print('Unexpected error during fetchMorePublicTrainingCourses: ${e.toString()}');
     } finally {
       _isFetchingMore = false;
       notifyListeners();
     }
   }
 
+  // جلب تفاصيل دورة تدريبية محددة (من القائمة المحملة أو API العام)
   Future<TrainingCourse?> fetchTrainingCourse(int courseId) async {
+    // حاول إيجاد الدورة في القائمة المحملة حالياً
     final existingCourse = _courses.firstWhereOrNull((course) => course.courseId == courseId);
-    print(existingCourse);
     if (existingCourse != null) {
       return existingCourse;
     }
 
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    // إذا لم توجد في القائمة، اذهب لجلبه من API العام
+    // لا نغير حالة التحميل الرئيسية هنا، يمكن استخدام حالة تحميل منفصلة
+    // setState(() { _isFetchingSingleCourse = true; }); notifyListeners();
 
     try {
       final course = await _apiService.fetchTrainingCourse(courseId);
-      print(course);
+      // لا تضيفه للقائمة
       return course;
     } on ApiException catch (e) {
-      _error = e.message;
+      print('API Exception during fetchSinglePublicTrainingCourse: ${e.message}');
+      _error = e.message; // يمكن تعيين الخطأ العام
       return null;
     } catch (e) {
-      _error = 'Failed to load course: ${e.toString()}';
+      print('Unexpected error during fetchSinglePublicTrainingCourse: ${e.toString()}');
+      _error = 'Failed to load course details: ${e.toString()}';
       return null;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      // setState(() { _isFetchingSingleCourse = false; }); notifyListeners();
     }
   }
 }
 
 // Simple extension for List<TrainingCourse>
-extension ListCourseExtension on List<TrainingCourse> {
+extension ListTrainingCourseExtension on List<TrainingCourse> {
   TrainingCourse? firstWhereOrNull(bool Function(TrainingCourse) test) {
     for (var element in this) {
       if (test(element)) return element;

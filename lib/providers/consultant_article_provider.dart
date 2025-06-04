@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/article.dart';
 import '../models/paginated_response.dart';
 import '../services/api_service.dart';
 import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
+
 
 class ConsultantArticleProvider extends ChangeNotifier {
   List<Article> _managedArticles = [];
@@ -22,7 +24,32 @@ class ConsultantArticleProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // جلب المقالات التي نشرها الاستشاري
+
+  // تابع مساعدة للتحويل الآمن والمتحكم به من List<dynamic> إلى List<Article>
+  List<Article> _convertDynamicListToArticleList(List<dynamic>? data) {
+    if (data == null) return []; // إذا كانت القائمة الأصلية null، أعد قائمة فارغة
+
+    List<Article> articleList = [];
+    for (final item in data) {
+      // تحقق مما إذا كان العنصر هو خريطة قبل محاولة فك ترميزه كـ Article
+      if (item is Map<String, dynamic>) {
+        try {
+          // حاول فك ترميز العنصر كـ Article
+          articleList.add(Article.fromJson(item));
+        } catch (e) {
+          // إذا فشل فك ترميز عنصر واحد، قم بتسجيل الخطأ وتجاهل هذا العنصر
+          print('Error parsing individual Article item: $e for item $item');
+        }
+      } else {
+        // إذا لم يكن العنصر خريطة، قم بتسجيل الخطأ وتجاهله
+        print('Skipping unexpected item type in list: $item');
+      }
+    }
+    return articleList; // أعد القائمة التي تم بناؤها بأمان
+  }
+
+
+  // جلب المقالات التي نشرها الاستشاري (الصفحة الأولى)
   Future<void> fetchManagedArticles(BuildContext context) async {
     _isLoading = true;
     _error = null;
@@ -31,17 +58,12 @@ class ConsultantArticleProvider extends ChangeNotifier {
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token == null) throw ApiException(401, 'User not authenticated.');
-      // Optional: check user type
-      // final userType = Provider.of<AuthProvider>(context, listen: false).user?.type;
-      // if (token == null || userType != 'خبير استشاري') {
-      //    throw ApiException(403, 'User not authorized to manage articles.');
-      // }
 
       final paginatedResponse = await _apiService.fetchManagedArticles(token!, page: 1);
-      // print(paginatedResponse); // للتصحيح
+      // print('Fetched initial articles response: $paginatedResponse'); // Debug print
 
-      // التصحيح هنا: إضافة التحويل الصريح إلى List<Article>
-      _managedArticles = (paginatedResponse.data ?? []) as List<Article>;
+      // استخدم التابع المساعد للتحويل الآمن
+      _managedArticles = _convertDynamicListToArticleList(paginatedResponse.data);
 
 
       _currentPage = paginatedResponse.currentPage ?? 1;
@@ -49,47 +71,53 @@ class ConsultantArticleProvider extends ChangeNotifier {
 
     } on ApiException catch (e) {
       _error = e.message;
+      print('API Exception during fetchManagedArticles: ${e.toString()}');
     } catch (e) {
       _error = 'Failed to load managed articles: ${e.toString()}';
+      print('Unexpected error during fetchManagedArticles: ${e.toString()}');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-
+  // جلب الصفحات التالية من المقالات التي نشرها الاستشاري
   Future<void> fetchMoreManagedArticles(BuildContext context) async {
     if (!hasMorePages || _isFetchingMore) return;
 
     _isFetchingMore = true;
-    _error = null;
+    _error = null; // قد لا تريد مسح الخطأ هنا إذا كان خطأ تحميل الصفحة الأولى
     notifyListeners();
 
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
-      if (token == null) throw ApiException(401, 'User not authenticated.');
+      if (token == null) {
+        // هذا لا ينبغي أن يحدث إذا كان المستخدم مصادقاً عليه أساساً
+        throw ApiException(401, 'User not authenticated.');
+      }
 
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchManagedArticles(token, page: nextPage);
-      // print(paginatedResponse); // للتصحيح
+      // print('Fetched more articles response: $paginatedResponse'); // Debug print
 
-      // التصحيح هنا: إضافة التحويل الصريح إلى List<Article>
-      _managedArticles.addAll((paginatedResponse.data ?? []) as List<Article>);
+      // استخدم التابع المساعد للتحويل الآمن للإضافة
+      _managedArticles.addAll(_convertDynamicListToArticleList(paginatedResponse.data));
 
 
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
       _lastPage = paginatedResponse.lastPage;
 
     } on ApiException catch (e) {
-      print('Error fetching more managed articles: ${e.message}');
+      print('API Exception during fetchMoreManagedArticles: ${e.message}');
+      // لا تعين _error العام هنا، فقط قم بتسجيل الخطأ أو إعلام المستخدم بطريقة أخرى بوجود مشكلة في تحميل المزيد
     } catch (e) {
-      print('Unexpected error fetching more managed articles: ${e.toString()}');
+      print('Unexpected error during fetchMoreManagedArticles: ${e.toString()}');
+      // لا تعين _error العام هنا
     } finally {
       _isFetchingMore = false;
       notifyListeners();
     }
   }
-
 
 
   // إنشاء مقال جديد بواسطة الاستشاري
@@ -103,9 +131,9 @@ class ConsultantArticleProvider extends ChangeNotifier {
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
       final newArticle = await _apiService.createManagedArticle(token, articleData);
-      print(newArticle);
+      print('Created new article: $newArticle'); // Debug print
 
-      _managedArticles.insert(0, newArticle);
+      _managedArticles.insert(0, newArticle); // أضف المقال الجديد في بداية القائمة
 
     } on ApiException catch (e) {
       _error = e.message;
@@ -130,13 +158,16 @@ class ConsultantArticleProvider extends ChangeNotifier {
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
       final updatedArticle = await _apiService.updateManagedArticle(token, articleId, articleData);
-      print(updatedArticle);
+      // print('Updated article: $updatedArticle'); // Debug print
 
+      // العثور على المقال في القائمة المحلية وتحديثه
       final index = _managedArticles.indexWhere((article) => article.articleId == articleId);
       if (index != -1) {
         _managedArticles[index] = updatedArticle;
       } else {
-        fetchManagedArticles(context);
+        // إذا لم يتم العثور على المقال في القائمة المحلية (ربما في صفحة أخرى لم يتم جلبها)،
+        // يمكن إعادة جلب القائمة الرئيسية لتعكس التغيير.
+        fetchManagedArticles(context); // إعادة جلب لتحديث القائمة المعروضة
       }
 
     } on ApiException catch (e) {
@@ -163,6 +194,7 @@ class ConsultantArticleProvider extends ChangeNotifier {
 
       await _apiService.deleteManagedArticle(token, articleId);
 
+      // إزالة المقال من القائمة المحلية
       _managedArticles.removeWhere((article) => article.articleId == articleId);
 
     } on ApiException catch (e) {
