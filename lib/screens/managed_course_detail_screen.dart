@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/managed_training_course_provider.dart'; // لجلب وتحديث الدورة
 import '../providers/course_enrollees_provider.dart'; // لجلب المسجلين
 import '../models/training_course.dart';
-import '../models/enrollee.dart'; // لعرض المسجلين
+import '../models/enrollee.dart';
+import 'edit_course_screen.dart'; // لعرض المسجلين
 
 class ManagedCourseDetailScreen extends StatefulWidget {
   final int courseId;
@@ -88,7 +89,7 @@ class _ManagedCourseDetailScreenState extends State<ManagedCourseDetailScreen> {
               onPressed: () {
                 // TODO: الانتقال إلى شاشة تعديل الدورة (EditCourseScreen) أو فتح نموذج
                 print('Edit Course Tapped for course ID ${widget.courseId}');
-                // Navigator.push(context, MaterialPageRoute(builder: (context) => EditCourseScreen(courseId: widget.courseId)));
+                 Navigator.push(context, MaterialPageRoute(builder: (context) => EditCourseScreen(courseId: widget.courseId)));
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('وظيفة تعديل الدورة لم تنفذ.')),
                 );

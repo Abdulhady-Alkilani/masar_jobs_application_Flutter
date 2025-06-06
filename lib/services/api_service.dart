@@ -838,4 +838,47 @@ class ApiService {
     // Note: The response body might only contain a message or the updated company
     return Company.fromJson(_handleResponse(response)['company']); // Assuming it returns {'message': '...', 'company': {...}}
   }
+
+
+  // ... (باقي كود ApiService قبل هذا) ...
+
+  // --- 6. Admin Endpoints ---
+  // ... (existing admin CRUD methods) ...
+
+
+  /// جلب فرص العمل لشركة محددة بواسطة الأدمن
+  /// يرسل طلب GET إلى مسار API في Backend يجلب الوظائف بفلتر الشركة.
+  /// **تحقق من Backend:** ما هو المسار الدقيق وطريقة الطلب (GET) لجلب وظائف شركة معينة بواسطة الأدمن؟
+  /// الأمثلة المحتملة للمسار:
+  /// - GET /admin/companies/{companyId}/jobs (مسار nested resource)
+  /// - GET /admin/jobs?company_id={companyId} (مسار مع فلتر كـ query parameter)
+  ///
+  /// هذا التابع يفترض مساراً معيناً وسيتطلب تعديلاً إذا كان المسار الفعلي مختلفاً في Backend.
+  ///
+  Future<PaginatedResponse<JobOpportunity>> fetchJobsByCompanyAdmin(String token, int companyId, {int page = 1}) async {
+    // **المسار الافتراضي المستخدم هنا:** GET /admin/jobs?company_id={companyId}
+    // **تحقق من backend للتأكد من المسار الصحيح.**
+    // إذا كان المسار هو /admin/companies/{companyId}/jobs، يجب تغيير السطر التالي
+    final endpoint = '/admin/jobs?company_id=$companyId&page=$page'; // مثال مع query parameter company_id و pagination
+
+    final response = await _get(endpoint, token: token);
+
+    // يجب أن يعيد المتحكم استجابة Pagination في حالة النجاح (200 OK)
+    // _handleResponse سيعالج الأخطاء ويفك ترميز JSON
+    // PaginatedResponse.fromJson سيحول البيانات إلى PaginatedResponse<JobOpportunity>
+    final dynamic decodedBody = _handleResponse(response);
+
+    // تحقق صريح للتأكد من أن الاستجابة هي Map (كما هو متوقع لـ PaginatedResponse)
+    if (decodedBody is Map<String, dynamic>) {
+      return PaginatedResponse<JobOpportunity>.fromJson(decodedBody, (json) => JobOpportunity.fromJson(json));
+    } else {
+      // إذا لم تكن Map، فهذا تنسيق استجابة غير متوقع
+      throw ApiException(response.statusCode, 'Received unexpected response format for jobs by company. Expected a Map.', errors: null);
+    }
+  }
+
+
+// ... (باقي توابع ApiService) ...
+
+
 }

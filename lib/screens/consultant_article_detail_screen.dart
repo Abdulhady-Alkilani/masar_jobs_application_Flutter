@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/consultant_article_provider.dart'; // لتنفيذ عمليات التحديث/الحذف
 import '../models/article.dart';
+import 'edit_article_screen.dart';
 
 class ConsultantArticleDetailScreen extends StatelessWidget {
   final Article article; // يمكن تمرير المقال مباشرة إذا تم جلبه في الشاشة السابقة
@@ -45,7 +46,7 @@ class ConsultantArticleDetailScreen extends StatelessWidget {
             onPressed: () {
               // TODO: الانتقال إلى شاشة تعديل المقال (EditArticleScreen) أو فتح نموذج
               print('Edit Article Tapped for ID ${article.articleId}');
-              // Navigator.push(context, MaterialPageRoute(builder: (context) => EditArticleScreen(article: article)));
+               Navigator.push(context, MaterialPageRoute(builder: (context) => EditArticleScreen(article: article)));
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('وظيفة تعديل المقال لم تنفذ.')),
               );

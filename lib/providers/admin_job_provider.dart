@@ -228,6 +228,64 @@ class AdminJobProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // جلب فرص العمل لشركة محددة (بواسطة الأدمن) - الصفحة الأولى
+  // يتطلب تابعاً في ApiService لجلب الوظائف بفلتر الشركة.
+  // هذا التابع سيحل محل fetchAllJobs في شاشة AdminManagedJobsByCompanyScreen.
+  Future<void> fetchJobsByCompany(BuildContext context, int companyId, {int page = 1}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final token = Provider.of<AuthProvider>(context, listen: false).token;
+      if (token == null) throw ApiException(401, 'User not authenticated.');
+      // Optional: check user type is Admin
+
+      // TODO: إضافة تابع fetchJobsByCompanyAdmin(String token, int companyId, {int page}) إلى ApiService
+      // هذا التابع في ApiService سيستدعي مسار API مثل /admin/companies/{companyId}/jobs أو /admin/jobs?company_id={companyId}
+      // For now, let's use a placeholder call
+      final paginatedResponse = await _apiService.fetchJobsByCompanyAdmin(token!, companyId, page: page);
+
+
+      // استخدم التابع المساعد للتحويل الآمن
+      _jobs = _convertDynamicListToJobOpportunityList(paginatedResponse.data);
+
+
+      _currentPage = paginatedResponse.currentPage ?? 1;
+      _lastPage = paginatedResponse.lastPage;
+
+    } on ApiException catch (e) {
+      _error = e.message;
+      print('API Exception during fetchJobsByCompanyAdmin: ${e.toString()}');
+    } catch (e) {
+      _error = 'Failed to load jobs for company: ${e.toString()}';
+      print('Unexpected error during fetchJobsByCompanyAdmin: ${e.toString()}');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+// TODO: أضف تابع fetchMoreJobsByCompany لنفس الغرض (للتمرير اللانهائي في قائمة وظائف شركة محددة)
+/*
+  Future<void> fetchMoreJobsByCompany(BuildContext context, int companyId) async {
+       if (!hasMorePages || _isFetchingMore) return;
+       _isFetchingMore = true; notifyListeners();
+       try {
+           final token = Provider.of<AuthProvider>(context, listen: false).token;
+           if (token == null) throw ApiException(401, 'User not authenticated.');
+           final nextPage = _currentPage + 1;
+           // TODO: استدعاء تابع fetchJobsByCompanyAdmin في ApiService
+           final paginatedResponse = await _apiService.fetchJobsByCompanyAdmin(token, companyId, page: nextPage);
+           _jobs.addAll(_convertDynamicListToJobOpportunityList(paginatedResponse.data));
+           _currentPage = paginatedResponse.currentPage ?? _currentPage;
+           _lastPage = paginatedResponse.lastPage;
+       } catch(e) { ... } finally { _isFetchingMore = false; notifyListeners(); }
+  }
+  */
+
+
 }
 
 // Simple extension for List<JobOpportunity>

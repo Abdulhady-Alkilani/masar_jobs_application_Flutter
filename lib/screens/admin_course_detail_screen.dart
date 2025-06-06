@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/admin_course_provider.dart'; // نحتاجها لتنفيذ التعديل/الحذف وربما جلب التفاصيل
 import '../providers/public_training_course_provider.dart'; // قد نستخدمه لجلب التفاصيل إذا لم يكن لدينا تابع في AdminProvider
 import '../models/training_course.dart';
-import '../services/api_service.dart'; // تأكد من المسار
+import '../services/api_service.dart';
+import 'create_edit_course_screen.dart'; // تأكد من المسار
 // استيراد شاشة التعديل
 
 class AdminCourseDetailScreen extends StatefulWidget {
@@ -98,10 +99,10 @@ class _AdminCourseDetailScreenState extends State<AdminCourseDetailScreen> {
               onPressed: () {
                 // TODO: الانتقال إلى شاشة تعديل الدورة (CreateEditCourseScreen)
                 print('Edit Course Tapped for ID ${widget.courseId}');
-                // Navigator.push(context, MaterialPageRoute(builder: (context) => CreateEditCourseScreen(course: _course))); // مرر كائن الدورة
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('وظيفة تعديل الدورة لم تنفذ.')),
-                );
+                 Navigator.push(context, MaterialPageRoute(builder: (context) => CreateEditCourseScreen(course: _course))); // مرر كائن الدورة
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //   const SnackBar(content: Text('وظيفة تعديل الدورة لم تنفذ.')),
+                // );
               },
             ),
             IconButton(

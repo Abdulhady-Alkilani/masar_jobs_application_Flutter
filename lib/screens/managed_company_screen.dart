@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/managed_company_provider.dart';
 import '../models/company.dart';
 // استيراد شاشات إدارة موارد الشركة
+import 'edit_company_screen.dart';
 import 'managed_jobs_list_screen.dart'; // تأكد من المسار
 import 'managed_courses_list_screen.dart'; // تأكد من المسار
 
@@ -39,7 +40,7 @@ class _ManagedCompanyScreenState extends State<ManagedCompanyScreen> {
               onPressed: () {
                 // TODO: الانتقال إلى شاشة تعديل الشركة (EditCompanyScreen) أو فتح نموذج
                 print('Edit Company Tapped');
-                // Navigator.push(context, MaterialPageRoute(builder: (context) => EditCompanyScreen(company: company)));
+                 Navigator.push(context, MaterialPageRoute(builder: (context) => EditCompanyScreen(company: company)));
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('وظيفة تعديل الشركة لم تنفذ.')),
                 );

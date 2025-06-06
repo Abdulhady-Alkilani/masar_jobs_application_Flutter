@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/admin_group_provider.dart'; // تأكد من المسار
-import '../models/group.dart'; // تأكد من المسار
+import '../models/group.dart';
+import 'admin_group_detail_screen.dart'; // تأكد من المسار
 // يمكنك استيراد شاشة إضافة/تعديل مجموعة هنا
 
 class AdminGroupsListScreen extends StatefulWidget {
@@ -99,7 +100,7 @@ class _AdminGroupsListScreenState extends State<AdminGroupsListScreen> {
               onTap: () {
                 // TODO: إذا كان هناك شاشة تفاصيل مجموعة للأدمن
                 print('Group Tapped: ${group.groupId}');
-                // Navigator.push(context, MaterialPageRoute(builder: (context) => AdminGroupDetailScreen(groupId: group.groupId!)));
+                 Navigator.push(context, MaterialPageRoute(builder: (context) => AdminGroupDetailScreen(groupId: group.groupId!)));
               }
           );
         },

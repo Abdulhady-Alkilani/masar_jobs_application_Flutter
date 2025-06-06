@@ -4,7 +4,8 @@ import '../providers/public_training_course_provider.dart'; // نستخدم Prov
 import '../models/training_course.dart'; // تأكد من المسار
 import '../services/api_service.dart'; // لاستخدام ApiException
 import '../providers/auth_provider.dart'; // لمعرفة حالة المصادقة لعرض زر التسجيل
-import '../providers/my_enrollments_provider.dart'; // للتسجيل في الدورة
+import '../providers/my_enrollments_provider.dart';
+import 'login_screen.dart'; // للتسجيل في الدورة
 // قد تحتاج لاستيراد شاشة تسجيل الدخول إذا كان المستخدم غير مسجل
 
 
@@ -66,7 +67,7 @@ class _TrainingCourseDetailScreenState extends State<TrainingCourseDetailScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('الرجاء تسجيل الدخول للتسجيل في الدورة.')),
       );
-      // Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+       Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
       return;
     }
 

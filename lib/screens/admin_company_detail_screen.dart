@@ -5,6 +5,7 @@ import '../models/company.dart'; // تأكد من المسار
 import '../models/user.dart'; // تأكد من المسار (لبيانات المدير)
 import '../services/api_service.dart'; // لاستخدام ApiException
 // استيراد شاشة التعديل
+import 'admin_managed_jobs_by_company_screen.dart';
 import 'create_edit_company_screen.dart'; // <--- تأكد من المسار
 // قد تحتاج لاستيراد شاشات إدارة موارد الشركة لهذا المدير (وظائف، دورات)
 
@@ -148,9 +149,26 @@ class _AdminCompanyDetailScreenState extends State<AdminCompanyDetailScreen> {
               onPressed: _isLoading ? null : _deleteCompany, // تعطيل الزر أثناء التحميل
             ),
             // TODO: يمكن إضافة أزرار أو روابط لإدارة موارد هذه الشركة (وظائف، دورات)
-             IconButton(icon: const Icon(Icons.work_outline), onPressed: () {
-               // ... Navigate to AdminManagedJobsScreen(companyId: _company!.companyId!) ...
-             })
+            IconButton(
+                icon: const Icon(Icons.work_outline),
+                tooltip: 'إدارة وظائف الشركة',
+                onPressed: _isLoading ? null : () { // تعطيل الزر أثناء التحميل
+                  print('Manage Company Jobs Tapped for ID ${_company!.companyId!}');
+                  if (_company?.companyId != null) {
+                    // الانتقال إلى شاشة إدارة الوظائف المرتبطة بالشركة، مع تمرير معرف الشركة
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AdminManagedJobsByCompanyScreen(companyId: _company!.companyId!), // <--- الانتقال للشاشة المطلوبة
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('معرف الشركة غير متاح لإدارة الوظائف.')),
+                    );
+                  }
+                }
+            ),
           ],
         ],
       ),

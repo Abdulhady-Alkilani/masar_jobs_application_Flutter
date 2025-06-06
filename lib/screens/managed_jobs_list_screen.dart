@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/managed_job_opportunity_provider.dart';
 import '../models/job_opportunity.dart';
+import 'create_job_screen.dart';
 import 'managed_job_detail_screen.dart'; // تأكد من المسار
 // استيراد شاشة إضافة وظيفة جديدة
 
@@ -46,7 +47,7 @@ class _ManagedJobsListScreenState extends State<ManagedJobsListScreen> {
             onPressed: () {
               // TODO: الانتقال إلى شاشة إضافة وظيفة جديدة (CreateJobScreen)
               print('Add Job Tapped');
-              // Navigator.push(context, MaterialPageRoute(builder: (context) => CreateJobScreen()));
+               Navigator.push(context, MaterialPageRoute(builder: (context) => CreateJobScreen()));
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('وظيفة إضافة وظيفة لم تنفذ.')),
               );
