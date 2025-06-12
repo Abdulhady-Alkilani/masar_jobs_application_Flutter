@@ -41,9 +41,9 @@ class _ManagedCompanyScreenState extends State<ManagedCompanyScreen> {
                 // TODO: الانتقال إلى شاشة تعديل الشركة (EditCompanyScreen) أو فتح نموذج
                 print('Edit Company Tapped');
                  Navigator.push(context, MaterialPageRoute(builder: (context) => EditCompanyScreen(company: company)));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('وظيفة تعديل الشركة لم تنفذ.')),
-                );
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //   const SnackBar(content: Text('وظيفة تعديل الشركة لم تنفذ.')),
+                // );
               },
             ),
         ],

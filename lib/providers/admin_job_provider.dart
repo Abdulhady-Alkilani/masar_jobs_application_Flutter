@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
+
 class AdminJobProvider extends ChangeNotifier {
   List<JobOpportunity> _jobs = [];
   bool _isLoading = false;
@@ -87,7 +88,6 @@ class AdminJobProvider extends ChangeNotifier {
 
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchAllJobsAdmin(token, page: nextPage);
-      // print('Fetched more admin jobs response: $paginatedResponse'); // Debug print
 
       // استخدم التابع المساعد للتحويل الآمن للإضافة
       _jobs.addAll(_convertDynamicListToJobOpportunityList(paginatedResponse.data));

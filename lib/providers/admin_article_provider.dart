@@ -20,6 +20,7 @@ class AdminArticleProvider extends ChangeNotifier {
   bool get isFetchingMore => _isFetchingMore;
   bool get hasMorePages => _lastPage == null || _currentPage < _lastPage!;
 
+
   final ApiService _apiService = ApiService();
 
   // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<Article>

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/public_company_provider.dart'; // نستخدم نفس Provider العام لجلب التفاصيل
 import '../models/company.dart'; // تأكد من المسار
 import '../services/api_service.dart'; // لاستخدام ApiException
@@ -54,14 +55,14 @@ class _CompanyDetailScreenState extends State<CompanyDetailScreen> {
   }
 
   // TODO: تابع لفتح رابط الموقع الإلكتروني (يتطلب url_launcher)
-  /*
+
    Future<void> _launchUrl(String urlString) async {
      final Uri url = Uri.parse(urlString);
      if (!await launchUrl(url)) {
        throw Exception('Could not launch $url');
      }
    }
-   */
+
 
 
   @override
@@ -113,7 +114,7 @@ class _CompanyDetailScreenState extends State<CompanyDetailScreen> {
                 onTap: () {
                   // TODO: استدعاء تابع _launchUrl هنا
                   print('Website tapped: ${_company!.webSite!}');
-                  // _launchUrl(_company!.webSite!);
+                   _launchUrl(_company!.webSite!);
                 },
                 child: Text(
                   _company!.webSite!,

@@ -4,9 +4,11 @@ import '../providers/public_training_course_provider.dart'; // نستخدم Prov
 import '../models/training_course.dart'; // تأكد من المسار
 import '../services/api_service.dart'; // لاستخدام ApiException
 import '../providers/auth_provider.dart'; // لمعرفة حالة المصادقة لعرض زر التسجيل
-import '../providers/my_enrollments_provider.dart';
-import 'login_screen.dart'; // للتسجيل في الدورة
-// قد تحتاج لاستيراد شاشة تسجيل الدخول إذا كان المستخدم غير مسجل
+import '../providers/my_enrollments_provider.dart'; // للتسجيل في الدورة
+import 'login_screen.dart'; // للانتقال لشاشة تسجيل الدخول
+
+// قد تحتاج لاستيراد حزمة لفتح الروابط (url_launcher)
+// import 'package:url_launcher/url_launcher.dart';
 
 
 class TrainingCourseDetailScreen extends StatefulWidget {
@@ -27,6 +29,8 @@ class _TrainingCourseDetailScreenState extends State<TrainingCourseDetailScreen>
   void initState() {
     super.initState();
     _fetchCourse(); // جلب تفاصيل الدورة عند تهيئة الشاشة
+    // TODO: جلب قائمة تسجيلات المستخدم هنا أو في MyEnrollmentsProvider لتمكين التحقق من isAlreadyEnrolled في build
+    // Provider.of<MyEnrollmentsProvider>(context, listen: false).fetchMyEnrollments(context);
   }
 
   // تابع لجلب تفاصيل الدورة المحدد
@@ -57,22 +61,23 @@ class _TrainingCourseDetailScreenState extends State<TrainingCourseDetailScreen>
 
   // تابع للتسجيل في الدورة
   Future<void> _enrollInCourse(BuildContext context) async {
-    // الحصول على provider التسجيل والتحقق من المصادقة
+    // الحصول على providers اللازمة
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final enrollmentsProvider = Provider.of<MyEnrollmentsProvider>(context, listen: false);
 
     // تحقق مما إذا كان المستخدم مسجل دخول
     if (!authProvider.isAuthenticated) {
-      // TODO: عرض رسالة للمستخدم أو الانتقال لشاشة تسجيل الدخول
+      // TODO: عرض رسالة للمستخدم أو الانتقال لشاشة تسجيل الدخول (تم التنفيذ الآن)
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('الرجاء تسجيل الدخول للتسجيل في الدورة.')),
       );
-       Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
       return;
     }
 
     // تحقق مما إذا كان المستخدم خريجاً (إذا كان التسجيل متاحاً للخريجين فقط)
-    // if (authProvider.user?.type != 'خريج') {
+    // final user = authProvider.user;
+    // if (user?.type != 'خريج') {
     //    ScaffoldMessenger.of(context).showSnackBar(
     //      const SnackBar(content: Text('التسجيل في الدورات متاح للخريجين فقط.')),
     //   );
@@ -80,49 +85,75 @@ class _TrainingCourseDetailScreenState extends State<TrainingCourseDetailScreen>
     // }
 
 
-    // TODO: يمكن إضافة AlertDialog للتأكيد قبل التسجيل
+    // TODO: يمكن إضافة AlertDialog للتأكيد قبل التسجيل (تم التنفيذ الآن)
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('تأكيد التسجيل'),
+          content: Text('هل أنت متأكد أنك تريد التسجيل في دورة "${_course?.courseName ?? 'بدون عنوان'}"؟'),
+          actions: <Widget>[
+            TextButton(child: const Text('إلغاء'), onPressed: () { Navigator.of(dialogContext).pop(false); }),
+            TextButton(child: const Text('التسجيل'), onPressed: () { Navigator.of(dialogContext).pop(true); }),
+          ],
+        );
+      },
+    );
 
-    // استدعاء تابع التسجيل في Provider
-    try {
-      await enrollmentsProvider.enrollInCourse(context, widget.courseId);
+    if (confirmed == true) { // إذا أكد المستخدم التسجيل
+      // استدعاء تابع التسجيل في Provider
+      try {
+        await enrollmentsProvider.enrollInCourse(context, widget.courseId);
 
-      // عرض رسالة نجاح
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم التسجيل في الدورة بنجاح!')),
-      );
-      // TODO: تحديث حالة زر التسجيل (مثلاً إخفاؤه أو تغييره إلى "مسجل بالفعل")
-      // هذا يتطلب إعادة بناء الشاشة أو جزء منها بناءً على حالة Provider التسجيل.
-      // يمكنك استخدام Consumer أو الاستماع لـ MyEnrollmentsProvider هنا.
+        // عرض رسالة نجاح
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم التسجيل في الدورة بنجاح!')),
+        );
+        // TODO: تحديث حالة زر التسجيل (سيتم تلقائياً عند إعادة بناء الـ Widget إذا تم تحديث حالة isAlreadyEnrolled)
 
-    } on ApiException catch (e) {
-      String errorMessage = 'فشل التسجيل: ${e.message}';
-      if (e.statusCode == 409) { // Conflict - Already enrolled
-        errorMessage = 'أنت مسجل بالفعل في هذه الدورة.';
+      } on ApiException catch (e) {
+        String errorMessage = 'فشل التسجيل: ${e.message}';
+        if (e.statusCode == 409) { // Conflict - Already enrolled
+          errorMessage = 'أنت مسجل بالفعل في هذه الدورة.';
+        }
+        if (e.errors != null) {
+          e.errors!.forEach((field, messages) => print('$field: ${messages.join(", ")}'));
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('فشل التسجيل في الدورة: ${e.toString()}')),
+        );
+      } finally {
+        // لا حاجة لتحديث حالة التحميل هنا، Provider سيتكفل بذلك
       }
-      if (e.errors != null) {
-        e.errors!.forEach((field, messages) => print('$field: ${messages.join(", ")}'));
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل التسجيل في الدورة: ${e.toString()}')),
-      );
     }
   }
+
+  // TODO: تابع لفتح رابط التسجيل إذا كان موجوداً (يتطلب url_launcher)
+  /*
+  Future<void> _launchUrl(String urlString) async {
+      final Uri url = Uri.parse(urlString);
+      if (!await launchUrl(url)) {
+        throw Exception('Could not launch $url');
+      }
+   }
+   */
 
 
   @override
   Widget build(BuildContext context) {
-    // هنا نستمع لـ MyEnrollmentsProvider لمعرفة ما إذا كان المستخدم مسجل بالفعل (اختياري)
+    // هنا نستمع لـ MyEnrollmentsProvider لمعرفة ما إذا كان المستخدم مسجل بالفعل
     final enrollmentsProvider = Provider.of<MyEnrollmentsProvider>(context);
-    // حالة التحميل للتسجيل نفسه
+    // حالة التحميل للتسجيل نفسه (خاصة بـ MyEnrollmentsProvider)
     final bool isEnrolling = enrollmentsProvider.isLoading;
-    // التحقق مما إذا كان المستخدم مسجل بالفعل (تحتاج إلى جلب قائمة التسجيلات أولاً)
-    // يمكنك جلب قائمة التسجيلات في initState أو استخدام Consumer here.
-    // For simplicity here, we assume enrollmentsProvider.enrollments is loaded.
+    // التحقق مما إذا كان المستخدم مسجل بالفعل (يعتمد على أن قائمة التسجيلات محملة)
     final bool isAlreadyEnrolled = enrollmentsProvider.enrollments.any((enrollment) => enrollment.courseId == widget.courseId);
+
+    // نحتاج أيضاً حالة مصادقة المستخدم من AuthProvider لتحديد ما إذا كان زر التسجيل سيعرض
+    final authProvider = Provider.of<AuthProvider>(context);
 
 
     return Scaffold(
@@ -179,7 +210,8 @@ class _TrainingCourseDetailScreenState extends State<TrainingCourseDetailScreen>
             if (_course!.enrollHyperLink != null)
               Text(
                 'رابط التسجيل: ${_course!.enrollHyperLink!}',
-                style: const TextStyle(fontSize: 14, color: Colors.blue), // يمكن جعله clickable
+                style: const TextStyle(fontSize: 14, color: Colors.blue), // TODO: جعله clickable
+                // يمكن إضافة onTap لاستدعاء _launchUrl
               ),
             const SizedBox(height: 16),
             const Text('الوصف:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -192,19 +224,34 @@ class _TrainingCourseDetailScreenState extends State<TrainingCourseDetailScreen>
 
             // TODO: زر التسجيل في الدورة
             // بناءً على حالة المستخدم (مصادق عليه وخريج) وحالة الدورة (متاحة للتسجيل) وحالة التسجيل الحالية للمستخدم
-            if (isAlreadyEnrolled) // إذا كان مسجل بالفعل
+            if (!authProvider.isAuthenticated) // إذا لم يكن المستخدم مسجل دخول
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    // الانتقال لشاشة تسجيل الدخول
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+                  },
+                  child: const Text('سجل دخول للتسجيل'),
+                ),
+              )
+            // تحقق مما إذا كان المستخدم خريجاً إذا كان ذلك شرطاً للتسجيل
+            // else if (authProvider.user?.type != 'خريج')
+            //   const Center(
+            //     child: Text('التسجيل في الدورات متاح للخريجين فقط.', style: TextStyle(fontSize: 16, color: Colors.orange)),
+            //   )
+            else if (isAlreadyEnrolled) // إذا كان مسجل بالفعل (ومصادق عليه)
               const Center(
                 child: Text('أنت مسجل بالفعل في هذه الدورة.', style: TextStyle(fontSize: 16, color: Colors.green)),
               )
             else if (isEnrolling) // إذا كان يتم عملية التسجيل حالياً
-              const Center(child: CircularProgressIndicator())
-            else // إذا لم يكن مسجل بالفعل وليس في عملية تسجيل
-              Center(
-                child: ElevatedButton(
-                  onPressed: () => _enrollInCourse(context), // استدعاء تابع التسجيل
-                  child: const Text('التسجيل في الدورة'),
+                const Center(child: CircularProgressIndicator())
+              else // إذا لم يكن مسجل بالفعل وليس في عملية تسجيل (ومصادق عليه ونوعه مناسب)
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () => _enrollInCourse(context), // استدعاء تابع التسجيل
+                    child: const Text('التسجيل في الدورة'),
+                  ),
                 ),
-              ),
           ],
         ),
       ),

@@ -41,7 +41,7 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
   }
 
 
-  // جلب فرص العمل التي نشرها المدير
+  // جلب فرص العمل التي نشرها المدير - الصفحة الأولى
   Future<void> fetchManagedJobs(BuildContext context) async {
     _isLoading = true;
     _error = null;
@@ -78,6 +78,7 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
     }
   }
 
+  // جلب الصفحات التالية من فرص العمل
   Future<void> fetchMoreManagedJobs(BuildContext context) async {
     if (!hasMorePages || _isFetchingMore) return;
 
@@ -91,7 +92,8 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
         throw ApiException(401, 'User not authenticated.');
       }
       final nextPage = _currentPage + 1;
-      final paginatedResponse = await _apiService.fetchManagedJobs(token, page: nextPage);
+      // استدعاء تابع fetchManagedJobs في ApiService مع رقم الصفحة التالية
+      final paginatedResponse = await _apiService.fetchManagedJobs(token, page: nextPage); // <--- التصحيح هنا
 
       // استخدم التابع المساعد للتحويل الآمن للإضافة
       _managedJobs.addAll(_convertDynamicListToJobOpportunityList(paginatedResponse.data));
