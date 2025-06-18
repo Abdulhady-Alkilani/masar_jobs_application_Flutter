@@ -299,10 +299,23 @@ class ApiService {
   // --- 3. Authenticated User Endpoints ---
 
   /// جلب بيانات المستخدم الحالي
+  /// يرسل طلب GET إلى /api/v1/user.
+  /// يتطلب توكن المستخدم للمصادقة.
+  /// يتم استخدامه في AuthProvider عند checkAuthStatus وبعد عمليات Login/Register لضمان تحديث بيانات المستخدم.
   Future<User> fetchCurrentUser(String token) async {
+    // استخدام التابع المساعد _get لإرسال طلب GET إلى مسار '/user' مع إرفاق التوكن
     final response = await _get('/user', token: token);
-    return User.fromJson(_handleResponse(response));
+
+    // معالجة الاستجابة باستخدام التابع المساعد _handleResponse
+    // هذا التابع سيتحقق من كود الحالة، يرمي استثناءات عند الخطأ (مثل 401), ويفك ترميز JSON عند النجاح.
+    final dynamic decodedData = _handleResponse(response);
+
+    // تحويل البيانات المفككة (والتي يجب أن تكون Map<String, dynamic> لكائن المستخدم) إلى موديل User
+    // _handleResponse يرمي استثناء إذا لم يكن الناتج Map في حالة النجاح (200 OK)
+    return User.fromJson(decodedData as Map<String, dynamic>);
   }
+
+  // ... (باقي توابع ApiService) ...
 
   /// جلب ملف المستخدم الشخصي
   Future<Profile> fetchUserProfile(String token) async {
