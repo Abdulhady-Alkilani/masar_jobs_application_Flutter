@@ -183,7 +183,10 @@ class UserProfileScreen extends StatelessWidget {
     if (!isGraduate && !isConsultant) // غير متاح لغير الخريج والاستشاري
     _buildInfoRow(null, 'غير متاح لهذا النوع من الحسابات.')// نص ثابت
     else if (user.skills == null || user.skills!.isEmpty)
-    _buildInfoRow(null, 'لم يتم إضافة مهارات بعد.')// نص ثابت
+    _buildInfoRow(null, 'لم يتم إضافة مهارات بعد.')
+
+
+    // نص ثابت
     else if (user.skills != null && user.skills!.isNotEmpty)
     Padding(
     padding: const EdgeInsets.symmetric(vertical: 8.0),
