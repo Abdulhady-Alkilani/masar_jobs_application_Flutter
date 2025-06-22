@@ -19,7 +19,9 @@ class PublicTrainingCourseProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // **تم حذف التابع المساعد _convertDynamicListToTrainingCourseList**
+  // !! تم حذف التابع المساعد _convertDynamicListToTrainingCourseList !!
+  // لأن التحويل من Map<String, dynamic> إلى TrainingCourse
+  // يتم الآن داخل PaginatedResponse.fromJson باستخدام الدالة الممررة
 
 
   // جلب أول صفحة من الدورات العامة
@@ -32,7 +34,7 @@ class PublicTrainingCourseProvider extends ChangeNotifier {
       // هذا المسار عام لا يتطلب توكن
       final paginatedResponse = await _apiService.fetchTrainingCourses(page: page);
 
-      // **استخدام PaginatedResponse.data مباشرة**
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
       _courses = paginatedResponse.data ?? [];
 
 
@@ -63,7 +65,7 @@ class PublicTrainingCourseProvider extends ChangeNotifier {
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchTrainingCourses(page: nextPage);
 
-      // **استخدام PaginatedResponse.data مباشرة**
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
       _courses.addAll(paginatedResponse.data ?? []);
 
 

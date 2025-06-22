@@ -20,7 +20,9 @@ class PublicCompanyProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // **تم حذف التابع المساعد _convertDynamicListToCompanyList**
+  // !! تم حذف التابع المساعد _convertDynamicListToCompanyList !!
+  // لأن التحويل من Map<String, dynamic> إلى Company
+  // يتم الآن داخل PaginatedResponse.fromJson باستخدام الدالة الممررة
 
 
   // جلب أول صفحة من الشركات العامة
@@ -33,7 +35,7 @@ class PublicCompanyProvider extends ChangeNotifier {
       // هذا المسار عام لا يتطلب توكن
       final paginatedResponse = await _apiService.fetchCompanies(page: page);
 
-      // **استخدام PaginatedResponse.data مباشرة**
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
       _companies = paginatedResponse.data ?? [];
 
 
@@ -64,7 +66,7 @@ class PublicCompanyProvider extends ChangeNotifier {
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchCompanies(page: nextPage);
 
-      // **استخدام PaginatedResponse.data مباشرة**
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
       _companies.addAll(paginatedResponse.data ?? []);
 
 

@@ -24,23 +24,9 @@ class AdminArticleProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<Article>
-  List<Article> _convertDynamicListToArticleList(List<dynamic>? data) {
-    if (data == null) return [];
-    List<Article> articleList = [];
-    for (final item in data) {
-      if (item is Map<String, dynamic>) {
-        try {
-          articleList.add(Article.fromJson(item));
-        } catch (e) {
-          print('Error parsing individual Article item: $e for item $item');
-        }
-      } else {
-        print('Skipping unexpected item type in Article list: $item');
-      }
-    }
-    return articleList;
-  }
+  // !! تم حذف التابع المساعد _convertDynamicListToArticleList !!
+  // لأن التحويل من Map<String, dynamic> إلى Article
+  // يتم الآن داخل PaginatedResponse.fromJson باستخدام الدالة الممررة
 
 
   // جلب جميع المقالات (للأدمن) - الصفحة الأولى
@@ -57,8 +43,8 @@ class AdminArticleProvider extends ChangeNotifier {
       final paginatedResponse = await _apiService.fetchAllArticlesAdmin(token!, page: 1);
       // print('Fetched initial admin articles response: $paginatedResponse'); // Debug print
 
-      // استخدم التابع المساعد للتحويل الآمن
-      _articles = _convertDynamicListToArticleList(paginatedResponse.data);
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
+      _articles = paginatedResponse.data ?? [];
 
 
       _currentPage = paginatedResponse.currentPage ?? 1;
@@ -92,8 +78,8 @@ class AdminArticleProvider extends ChangeNotifier {
       final paginatedResponse = await _apiService.fetchAllArticlesAdmin(token, page: nextPage);
       // print('Fetched more admin articles response: $paginatedResponse'); // Debug print
 
-      // استخدم التابع المساعد للتحويل الآمن للإضافة
-      _articles.addAll(_convertDynamicListToArticleList(paginatedResponse.data));
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
+      _articles.addAll(paginatedResponse.data ?? []);
 
 
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
@@ -233,7 +219,7 @@ class AdminArticleProvider extends ChangeNotifier {
 }
 
 // Simple extension for List<Article>
-extension ListConsultantArticleExtension on List<Article> {
+extension ListConsultantArticleExtension on List<Article> { // ربما يجب تغيير الاسم إلى ListArticleExtension أو ListAdminArticleExtension ليكون أكثر وضوحاً
   Article? firstWhereOrNull(bool Function(Article) test) {
     for (var element in this) {
       if (test(element)) return element;

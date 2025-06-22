@@ -19,7 +19,9 @@ class PublicJobOpportunityProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // **تم حذف التابع المساعد _convertDynamicListToJobOpportunityList**
+  // !! تم حذف التابع المساعد _convertDynamicListToJobOpportunityList !!
+  // لأن التحويل من Map<String, dynamic> إلى JobOpportunity
+  // يتم الآن داخل PaginatedResponse.fromJson باستخدام الدالة الممررة
 
 
   // جلب أول صفحة من فرص العمل العامة
@@ -33,7 +35,7 @@ class PublicJobOpportunityProvider extends ChangeNotifier {
       final paginatedResponse = await _apiService.fetchJobOpportunities(page: page);
       // print('Fetched initial public jobs response: $paginatedResponse'); // Debug print
 
-      // **استخدام PaginatedResponse.data مباشرة**
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
       _jobs = paginatedResponse.data ?? [];
 
 
@@ -64,7 +66,7 @@ class PublicJobOpportunityProvider extends ChangeNotifier {
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchJobOpportunities(page: nextPage);
 
-      // **استخدام PaginatedResponse.data مباشرة**
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
       _jobs.addAll(paginatedResponse.data ?? []);
 
 

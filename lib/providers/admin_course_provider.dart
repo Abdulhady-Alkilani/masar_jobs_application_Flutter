@@ -21,23 +21,9 @@ class AdminCourseProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<TrainingCourse>
-  List<TrainingCourse> _convertDynamicListToTrainingCourseList(List<dynamic>? data) {
-    if (data == null) return [];
-    List<TrainingCourse> courseList = [];
-    for (final item in data) {
-      if (item is Map<String, dynamic>) {
-        try {
-          courseList.add(TrainingCourse.fromJson(item));
-        } catch (e) {
-          print('Error parsing individual TrainingCourse item: $e for item $item');
-        }
-      } else {
-        print('Skipping unexpected item type in TrainingCourse list: $item');
-      }
-    }
-    return courseList;
-  }
+  // !! تم حذف التابع المساعد _convertDynamicListToTrainingCourseList !!
+  // لأن التحويل من Map<String, dynamic> إلى TrainingCourse
+  // يتم الآن داخل PaginatedResponse.fromJson باستخدام الدالة الممررة
 
 
   // جلب جميع الدورات (للأدمن) - الصفحة الأولى
@@ -54,8 +40,8 @@ class AdminCourseProvider extends ChangeNotifier {
       final paginatedResponse = await _apiService.fetchAllCoursesAdmin(token!, page: 1);
       // print('Fetched initial admin courses response: $paginatedResponse'); // Debug print
 
-      // استخدم التابع المساعد للتحويل الآمن
-      _courses = _convertDynamicListToTrainingCourseList(paginatedResponse.data);
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
+      _courses = paginatedResponse.data ?? [];
 
 
       _currentPage = paginatedResponse.currentPage ?? 1;
@@ -88,8 +74,8 @@ class AdminCourseProvider extends ChangeNotifier {
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchAllCoursesAdmin(token, page: nextPage);
 
-      // استخدم التابع المساعد للتحويل الآمن للإضافة
-      _courses.addAll(_convertDynamicListToTrainingCourseList(paginatedResponse.data));
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
+      _courses.addAll(paginatedResponse.data ?? []);
 
 
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
@@ -229,7 +215,7 @@ class AdminCourseProvider extends ChangeNotifier {
 }
 
 // Simple extension for List<TrainingCourse>
-extension ListTrainingCourseExtension on List<TrainingCourse> {
+extension ListTrainingCourseExtension on List<TrainingCourse> { // ربما يجب تغيير الاسم ليكون أكثر وضوحاً
   TrainingCourse? firstWhereOrNull(bool Function(TrainingCourse) test) {
     for (var element in this) {
       if (test(element)) return element;

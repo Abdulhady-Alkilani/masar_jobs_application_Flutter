@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+// لا تحتاج لتوكن لأن المسارات عامة
+// import 'package:provider/provider.dart'; // لا تحتاج Provider لاستدعاء AuthProvider هنا
+
 import '../models/article.dart';
-import '../models/paginated_response.dart'; // تأكد من المسار
+import '../models/paginated_response.dart';
 import '../services/api_service.dart';
-// لا تحتاج AuthProvider هنا لأن المسارات عامة
-// import '../providers/auth_provider.dart';
-// import 'package:provider/provider.dart';
 
 
 class PublicArticleProvider extends ChangeNotifier {
@@ -25,8 +24,7 @@ class PublicArticleProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // **احذف هذا التابع المساعد**:
-  // List<Article> _convertDynamicListToArticleList(List<dynamic>? data) { ... }
+  // !! تم حذف التابع المساعد _convertDynamicListToArticleList !!
 
 
   // جلب أول صفحة من المقالات العامة
@@ -36,10 +34,11 @@ class PublicArticleProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // هذا المسار عام لا يتطلب توكن
       final paginatedResponse = await _apiService.fetchArticles(page: page);
       // print('Fetched initial public articles response: $paginatedResponse'); // Debug print
 
-      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة الآن
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
       // لأن التحويل الآمن أصبح يتم داخل PaginatedResponse.fromJson
       _articles = paginatedResponse.data ?? [];
 
@@ -73,7 +72,7 @@ class PublicArticleProvider extends ChangeNotifier {
       final paginatedResponse = await _apiService.fetchArticles(page: nextPage);
       // print('Fetched more public articles response: $paginatedResponse'); // Debug print
 
-      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة الآن
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
       _articles.addAll(paginatedResponse.data ?? []);
 
 

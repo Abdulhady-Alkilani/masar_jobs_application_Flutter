@@ -22,23 +22,9 @@ class AdminJobProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<JobOpportunity>
-  List<JobOpportunity> _convertDynamicListToJobOpportunityList(List<dynamic>? data) {
-    if (data == null) return [];
-    List<JobOpportunity> jobList = [];
-    for (final item in data) {
-      if (item is Map<String, dynamic>) {
-        try {
-          jobList.add(JobOpportunity.fromJson(item));
-        } catch (e) {
-          print('Error parsing individual JobOpportunity item: $e for item $item');
-        }
-      } else {
-        print('Skipping unexpected item type in JobOpportunity list: $item');
-      }
-    }
-    return jobList;
-  }
+  // !! تم حذف التابع المساعد _convertDynamicListToJobOpportunityList !!
+  // لأن التحويل من Map<String, dynamic> إلى JobOpportunity
+  // يتم الآن داخل PaginatedResponse.fromJson باستخدام الدالة الممررة
 
 
   // جلب جميع فرص العمل (للأدمن) - الصفحة الأولى
@@ -55,8 +41,8 @@ class AdminJobProvider extends ChangeNotifier {
       final paginatedResponse = await _apiService.fetchAllJobsAdmin(token!, page: 1);
       // print('Fetched initial admin jobs response: $paginatedResponse'); // Debug print
 
-      // استخدم التابع المساعد للتحويل الآمن
-      _jobs = _convertDynamicListToJobOpportunityList(paginatedResponse.data);
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
+      _jobs = paginatedResponse.data ?? [];
 
 
       _currentPage = paginatedResponse.currentPage ?? 1;
@@ -89,8 +75,8 @@ class AdminJobProvider extends ChangeNotifier {
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchAllJobsAdmin(token, page: nextPage);
 
-      // استخدم التابع المساعد للتحويل الآمن للإضافة
-      _jobs.addAll(_convertDynamicListToJobOpportunityList(paginatedResponse.data));
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
+      _jobs.addAll(paginatedResponse.data ?? []);
 
 
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
@@ -247,8 +233,8 @@ class AdminJobProvider extends ChangeNotifier {
       final paginatedResponse = await _apiService.fetchJobsByCompanyAdmin(token!, companyId, page: page);
 
 
-      // استخدم التابع المساعد للتحويل الآمن
-      _jobs = _convertDynamicListToJobOpportunityList(paginatedResponse.data);
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
+      _jobs = paginatedResponse.data ?? [];
 
 
       _currentPage = paginatedResponse.currentPage ?? 1;
@@ -284,8 +270,8 @@ class AdminJobProvider extends ChangeNotifier {
       // استدعاء تابع ApiService لجلب الوظائف بفلتر الشركة
       final paginatedResponse = await _apiService.fetchJobsByCompanyAdmin(token, companyId, page: nextPage);
 
-      // استخدم التابع المساعد للتحويل الآمن للإضافة
-      _jobs.addAll(_convertDynamicListToJobOpportunityList(paginatedResponse.data));
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
+      _jobs.addAll(paginatedResponse.data ?? []);
 
 
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
@@ -304,7 +290,7 @@ class AdminJobProvider extends ChangeNotifier {
 }
 
 // Simple extension for List<JobOpportunity>
-extension ListJobOpportunityExtension on List<JobOpportunity> {
+extension ListJobOpportunityExtension on List<JobOpportunity> { // ربما يجب تغيير الاسم ليكون أكثر وضوحاً
   JobOpportunity? firstWhereOrNull(bool Function(JobOpportunity) test) {
     for (var element in this) {
       if (test(element)) return element;

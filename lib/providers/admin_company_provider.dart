@@ -22,23 +22,9 @@ class AdminCompanyProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<Company>
-  List<Company> _convertDynamicListToCompanyList(List<dynamic>? data) {
-    if (data == null) return [];
-    List<Company> companyList = [];
-    for (final item in data) {
-      if (item is Map<String, dynamic>) {
-        try {
-          companyList.add(Company.fromJson(item));
-        } catch (e) {
-          print('Error parsing individual Company item: $e for item $item');
-        }
-      } else {
-        print('Skipping unexpected item type in Company list: $item');
-      }
-    }
-    return companyList;
-  }
+  // !! تم حذف التابع المساعد _convertDynamicListToCompanyList !!
+  // لأن التحويل من Map<String, dynamic> إلى Company
+  // يتم الآن داخل PaginatedResponse.fromJson باستخدام الدالة الممررة
 
 
   // جلب جميع الشركات (للأدمن) - الصفحة الأولى
@@ -56,8 +42,8 @@ class AdminCompanyProvider extends ChangeNotifier {
       // print('Fetched initial admin companies response: $paginatedResponse'); // Debug print
 
 
-      // استخدم التابع المساعد للتحويل الآمن
-      _companies = _convertDynamicListToCompanyList(paginatedResponse.data);
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
+      _companies = paginatedResponse.data ?? [];
 
 
       _currentPage = paginatedResponse.currentPage ?? 1;
@@ -90,8 +76,8 @@ class AdminCompanyProvider extends ChangeNotifier {
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchAllCompaniesAdmin(token, page: nextPage);
 
-      // استخدم التابع المساعد للتحويل الآمن للإضافة
-      _companies.addAll(_convertDynamicListToCompanyList(paginatedResponse.data));
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
+      _companies.addAll(paginatedResponse.data ?? []);
 
 
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
@@ -230,7 +216,7 @@ class AdminCompanyProvider extends ChangeNotifier {
 }
 
 // Simple extension for List<Company>
-extension ListAdminCompanyExtension on List<Company> {
+extension ListAdminCompanyExtension on List<Company> { // ربما يجب تغيير الاسم ليكون أكثر وضوحاً
   Company? firstWhereOrNull(bool Function(Company) test) {
     for (var element in this) {
       if (test(element)) return element;

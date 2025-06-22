@@ -22,7 +22,9 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // **تم حذف التابع المساعد _convertDynamicListToJobOpportunityList**
+  // !! تم حذف التابع المساعد _convertDynamicListToJobOpportunityList !!
+  // لأن التحويل من Map<String, dynamic> إلى JobOpportunity
+  // يتم الآن داخل PaginatedResponse.fromJson باستخدام الدالة الممررة
 
 
   // جلب فرص العمل التي نشرها المدير
@@ -43,7 +45,7 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
       final paginatedResponse = await _apiService.fetchManagedJobs(token!, page: 1);
       // print('Fetched initial managed jobs response: $paginatedResponse'); // Debug print
 
-      // **استخدام PaginatedResponse.data مباشرة**
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
       _managedJobs = paginatedResponse.data ?? [];
 
 
@@ -76,7 +78,7 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchManagedJobs(token, page: nextPage);
 
-      // **استخدام PaginatedResponse.data مباشرة**
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
       _managedJobs.addAll(paginatedResponse.data ?? []);
 
 

@@ -22,7 +22,9 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // **تم حذف التابع المساعد _convertDynamicListToTrainingCourseList**
+  // !! تم حذف التابع المساعد _convertDynamicListToTrainingCourseList !!
+  // لأن التحويل من Map<String, dynamic> إلى TrainingCourse
+  // يتم الآن داخل PaginatedResponse.fromJson باستخدام الدالة الممررة
 
 
   // جلب الدورات التي نشرها المستخدم (المدير أو الاستشاري)
@@ -43,7 +45,7 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
       final paginatedResponse = await _apiService.fetchManagedCourses(token!, page: 1);
       // print('Fetched initial managed courses response: $paginatedResponse'); // Debug print
 
-      // **استخدام PaginatedResponse.data مباشرة**
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
       _managedCourses = paginatedResponse.data ?? [];
 
 
@@ -76,7 +78,7 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchManagedCourses(token, page: nextPage);
 
-      // **استخدام PaginatedResponse.data مباشرة**
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
       _managedCourses.addAll(paginatedResponse.data ?? []);
 
 
