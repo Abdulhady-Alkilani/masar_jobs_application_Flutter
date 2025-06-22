@@ -1,10 +1,19 @@
 // lib/screens/admin/admin_panel_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:masar_jobs/screens/admin/skills/admin_skills_list_screen.dart';
+import 'package:provider/provider.dart'; // استيراد Provider
+import '../../providers/auth_provider.dart'; // استيراد AuthProvider
+
+import 'articles/admin_articles_list_screen.dart';
+import 'courses/admin_courses_list_screen.dart';
+import 'groups/admin_groups_list_screen.dart';
+import 'jobs/admin_jobs_list_screen.dart';
 import 'users/admin_users_list_screen.dart';
 import 'companies/admin_companies_list_screen.dart';
 import 'companies/admin_company_requests_screen.dart';
 // ... قم باستيراد باقي شاشات الإدارة هنا عندما تنشئها
+// import 'articles/admin_articles_list_screen.dart'; // مثال لاستيراد شاشة المقالات
 
 class AdminPanelScreen extends StatelessWidget {
   const AdminPanelScreen({super.key});
@@ -14,6 +23,22 @@ class AdminPanelScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('لوحة تحكم الأدمن'),
+        actions: [
+          // إضافة زر تسجيل الخروج في قائمة الإجراءات (actions)
+          IconButton(
+            icon: const Icon(Icons.logout), // أيقونة تسجيل الخروج
+            tooltip: 'تسجيل الخروج', // نص يظهر عند التمرير فوق الزر
+            onPressed: () async {
+              // استدعاء تابع تسجيل الخروج من AuthProvider
+              // listen: false لأننا فقط نستدعي تابع ولا نستمع للتغييرات
+              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+              await authProvider.logout();
+              // بعد تسجيل الخروج، يجب أن يقوم التطبيق بالانتقال إلى شاشة تسجيل الدخول
+              // وهذا عادةً يتم التعامل معه في مستوى أعلى (مثل MyApp أو MainScreen)
+              // بالاستماع لتغييرات حالة المصادقة في AuthProvider.
+            },
+          ),
+        ],
       ),
       body: GridView.count(
         crossAxisCount: 2, // عمودان في الشبكة
@@ -51,7 +76,7 @@ class AdminPanelScreen extends StatelessWidget {
             title: 'إدارة الوظائف',
             icon: Icons.work_outline,
             onTap: () {
-              // TODO: Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminJobsListScreen()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminJobsListScreen()));
             },
           ),
           _buildDashboardCard(
@@ -59,7 +84,7 @@ class AdminPanelScreen extends StatelessWidget {
             title: 'إدارة الدورات',
             icon: Icons.school_outlined,
             onTap: () {
-              // TODO: Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminCoursesListScreen()));
+               Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminCoursesListScreen()));
             },
           ),
           _buildDashboardCard(
@@ -67,7 +92,8 @@ class AdminPanelScreen extends StatelessWidget {
             title: 'إدارة المقالات',
             icon: Icons.article_outlined,
             onTap: () {
-              // TODO: Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminArticlesListScreen()));
+              // مثال للانتقال إذا كانت الشاشة جاهزة
+               Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminArticlesListScreen()));
             },
           ),
           _buildDashboardCard(
@@ -75,7 +101,7 @@ class AdminPanelScreen extends StatelessWidget {
             title: 'إدارة المهارات',
             icon: Icons.star_outline,
             onTap: () {
-              // TODO: Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminSkillsListScreen()));
+               Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminSkillsListScreen()));
             },
           ),
           _buildDashboardCard(
@@ -83,7 +109,7 @@ class AdminPanelScreen extends StatelessWidget {
             title: 'إدارة المجموعات',
             icon: Icons.group_work_outlined,
             onTap: () {
-              // TODO: Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminGroupsListScreen()));
+               Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminGroupsListScreen()));
             },
           ),
         ],
