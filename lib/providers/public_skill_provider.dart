@@ -21,7 +21,6 @@ class PublicSkillProvider extends ChangeNotifier {
 
     try {
       _skills = await _apiService.fetchSkills(searchTerm: searchTerm);
-      print(_skills);
     } on ApiException catch (e) {
       _error = e.message;
     } catch (e) {

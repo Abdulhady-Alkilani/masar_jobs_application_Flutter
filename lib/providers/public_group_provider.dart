@@ -21,7 +21,7 @@ class PublicGroupProvider extends ChangeNotifier {
 
     try {
       _groups = await _apiService.fetchGroups();
-      print(_groups);
+
     } on ApiException catch (e) {
       _error = e.message;
     } catch (e) {

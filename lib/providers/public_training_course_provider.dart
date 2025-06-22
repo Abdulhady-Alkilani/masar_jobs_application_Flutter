@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/training_course.dart';
-import '../models/paginated_response.dart';
 import '../services/api_service.dart';
 
 class PublicTrainingCourseProvider extends ChangeNotifier {

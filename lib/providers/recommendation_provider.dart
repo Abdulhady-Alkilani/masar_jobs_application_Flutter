@@ -1,11 +1,13 @@
+// lib/providers/recommendation_provider.dart
+
 import 'package:flutter/material.dart';
-import '../models/recommendation_response.dart';
+import '../models/recommendation_response.dart'; // <-- 1. استيراد الموديل الجديد
 import '../services/api_service.dart';
 import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class RecommendationProvider extends ChangeNotifier {
-  RecommendationResponse? _recommendations;
+  RecommendationResponse? _recommendations; // <-- 2. تحديد النوع الصحيح
   bool _isLoading = false;
   String? _error;
 
@@ -15,7 +17,6 @@ class RecommendationProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // جلب التوصيات للمستخدم الحالي
   Future<void> fetchRecommendations(BuildContext context) async {
     _isLoading = true;
     _error = null;
@@ -23,12 +24,11 @@ class RecommendationProvider extends ChangeNotifier {
 
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
-      print(token);
       if (token == null) {
         throw ApiException(401, 'User not authenticated.');
       }
+      // 3. ApiService سيعيد الآن كائنًا من نوع RecommendationResponse
       _recommendations = await _apiService.fetchRecommendations(token);
-      print(_recommendations);
 
     } on ApiException catch (e) {
       _error = e.message;

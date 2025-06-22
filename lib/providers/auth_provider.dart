@@ -1,8 +1,8 @@
+// lib/providers/auth_provider.dart
+
 import 'package:flutter/material.dart';
 import '../models/user.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../services/api_service.dart'; // تأكد من الاستيراد
+import '../services/api_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   // --- حالة المصادقة والتحميل والخطأ ---
@@ -15,196 +15,115 @@ class AuthProvider extends ChangeNotifier {
   User? get user => _user;
   String? get token => _token;
   bool get isLoading => _isLoading;
-  bool get isAuthenticated => _user != null && _token != null; // هل المستخدم مصادق عليه؟
-  String? get error => _error; // Getter عام للوصول إلى الخطأ
+  bool get isAuthenticated => _user != null && _token != null;
+  String? get error => _error;
 
   // --- مثيل خدمة API ---
   final ApiService _apiService = ApiService();
 
-  // --- إدارة التوكن في SharedPreferences (معالجة داخل ApiService حالياً) ---
-  // التوابع saveAuthToken, getAuthToken, removeAuthToken هي الآن جزء من ApiService
-  // لا تحتاج لإعادة تعريفها هنا.
-
   // --- توابع Authentication ---
 
-  /// التحقق من حالة المصادقة عند بدء التطبيق (جلب التوكن المخزن وجلب بيانات المستخدم)
+  /// التحقق من حالة المصادقة عند بدء التطبيق.
   Future<void> checkAuthStatus() async {
     _isLoading = true;
-    _error = null; // مسح الخطأ عند بدء عملية جديدة
+    _error = null;
     notifyListeners();
 
     try {
-      _token = await _apiService.getAuthToken(); // جلب التوكن المخزن من SP
-
+      _token = await _apiService.getAuthToken();
       if (_token != null) {
-        // إذا وجد توكن، حاول جلب بيانات المستخدم
         _user = await _apiService.fetchCurrentUser(_token!);
-        // إذا نجح الجلب، _user و _token موجودان ويتم تعيين _error إلى null (ضمن try)
-        _error = null; // تأكيد مسح الخطأ في حالة النجاح
-
+        _error = null;
       } else {
-        // لا يوجد توكن مخزن، المستخدم غير مصادق عليه
         _user = null;
-        _error = null; // مسح الخطأ
+        _error = null;
       }
-
     } catch (e) {
-      // إذا فشل جلب المستخدم (مثال: التوكن منتهي الصلاحية أو غير صالح)
       print('Failed to fetch user with saved token: $e');
-      await _apiService.removeAuthToken(); // إزالة التوكن غير الصالح محلياً
-      _token = null; // مسح التوكن في Provider
-      _user = null; // مسح المستخدم في Provider
-      _error = 'Failed to authenticate with saved token.'; // تعيين الخطأ
-
+      await _apiService.removeAuthToken();
+      _token = null;
+      _user = null;
+      _error = 'Failed to authenticate with saved token.';
     } finally {
-      _isLoading = false; // إنهاء حالة التحميل
-      notifyListeners(); // إعلام المستمعين بتغير حالة المصادقة والتحميل والخطأ
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   /// تسجيل مستخدم جديد.
-  /// يستدعي API لإنشاء المستخدم.
-  /// يحفظ التوكن وينشئ المستخدم في Provider عند النجاح.
   Future<void> register(String firstName, String lastName, String username, String email, String password, String passwordConfirmation, String phone, String type) async {
     _isLoading = true;
-    _error = null; // مسح الخطأ عند بدء عملية جديدة
+    _error = null;
     notifyListeners();
 
     try {
       final authResponse = await _apiService.registerUser(firstName, lastName, username, email, password, passwordConfirmation, phone, type);
-      // ApiService.registerUser يقوم بحفظ التوكن في SharedPreferences تلقائياً عند النجاح ويعيد AuthResponse
-
-      _user = authResponse.user; // تعيين المستخدم من الاستجابة
-      _token = authResponse.accessToken; // تعيين التوكن من الاستجابة
-      _error = null; // مسح الخطأ في حالة النجاح
-
+      _user = authResponse.user;
+      _token = authResponse.accessToken;
+      _error = null;
     } on ApiException catch (e) {
-      _error = e.message; // تعيين الخطأ من API
-      // رمي الخطأ ليتم معالجته في الواجهة (لعرض رسائل التحقق)
+      _error = e.message;
       throw e;
     } catch (e) {
-      _error = 'An unexpected error occurred during registration: ${e.toString()}'; // تعيين الخطأ لأي استثناء آخر
-      throw ApiException(0, _error!); // رمي خطأ موحد
+      _error = 'An unexpected error occurred during registration: ${e.toString()}';
+      throw ApiException(0, _error!);
     } finally {
-      _isLoading = false; // إنهاء حالة التحميل
-      notifyListeners(); // إعلام المستمعين
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   /// تسجيل دخول المستخدم.
-  /// يستدعي API لتسجيل الدخول.
-  /// يحفظ التوكن وينشئ المستخدم في Provider عند النجاح.
   Future<void> login(String email, String password) async {
     _isLoading = true;
-    _error = null; // مسح الخطأ عند بدء عملية جديدة
+    _error = null;
     notifyListeners();
 
     try {
       final authResponse = await _apiService.loginUser(email, password);
-      // ApiService.loginUser يقوم بحفظ التوكن في SharedPreferences تلقائياً عند النجاح ويعيد AuthResponse
-
-      _user = authResponse.user; // تعيين المستخدم من الاستجابة
-      _token = authResponse.accessToken; // تعيين التوكن من الاستجابة
-      _error = null; // مسح الخطأ في حالة النجاح
-
+      _user = authResponse.user;
+      _token = authResponse.accessToken;
+      _error = null;
     } on ApiException catch (e) {
-      _error = e.message; // تعيين الخطأ من API
-      // رمي الخطأ ليتم معالجته في الواجهة (لعرض رسائل التحقق)
+      _error = e.message;
       throw e;
     } catch (e) {
-      _error = 'An unexpected error occurred during login: ${e.toString()}'; // تعيين الخطأ لأي استثناء آخر
-      throw ApiException(0, _error!); // رمي خطأ موحد
+      _error = 'An unexpected error occurred during login: ${e.toString()}';
+      throw ApiException(0, _error!);
     } finally {
-      _isLoading = false; // إنهاء حالة التحميل
-      notifyListeners(); // إعلام المستمعين
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   /// تسجيل خروج المستخدم.
-  /// يستدعي API لتسجيل الخروج وإبطال التوكن في Backend.
-  /// يزيل التوكن والمستخدم من Provider ومن SharedPreferences.
   Future<void> logout() async {
     _isLoading = true;
-    _error = null; // مسح الخطأ عند بدء عملية جديدة
+    _error = null;
     notifyListeners();
 
     try {
       if (_token != null) {
-        // استدعاء API لتسجيل الخروج، ApiService.logoutUser يقوم بإزالة التوكن من SharedPreferences تلقائياً
         await _apiService.logoutUser(_token!);
       }
-      // مسح المستخدم والتوكن في Provider بغض النظر عن نتيجة استدعاء API (الأمان أولاً)
+    } catch (e) {
+      print('Error during logout: $e');
+    } finally {
       _user = null;
       _token = null;
-      _error = null; // مسح الخطأ في حالة النجاح
-
-    } on ApiException catch (e) {
-      print('API Exception during logout: ${e.message}');
-      // قد لا تعين _error هنا لأن المستخدم يريد تسجيل الخروج على أي حال
-      // إزالة التوكن والمستخدم تتم في finally
-    } catch (e) {
-      print('Unexpected error during logout: ${e.toString()}');
-      // قد لا تعين _error هنا
-      // إزالة التوكن والمستخدم تتم في finally
-    } finally {
-      _user = null; // تأكيد المسح
-      _token = null; // تأكيد المسح
-      _isLoading = false; // إنهاء حالة التحميل
-      notifyListeners(); // إعلام المستمعين
+      _error = null;
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   // --- توابع تحديث بيانات المستخدم ---
 
-  /// تحديث الملف الشخصي للمستخدم الحالي. /// تحديث الملف الشخصي للمستخدم الحالي.
-  //   /// تستخدم مسار PUT /api/v1/profile.
-  //   /// يتم استدعاؤها من واجهة تعديل الملف الشخصي.
-  //   /// profileData: Map تحتوي على البيانات المراد تحديثها (اسم أول، اسم أخير، هاتف، حقول الملف الشخصي).
-    Future<void> updateUserProfile(Map<String, dynamic> profileData) async {
-      if (_token == null) {
-        throw ApiException(401, 'User not authenticated.');
-      }
+  // **** بداية التعديل المطلوب ****
 
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
-      try {
-        // استدعاء API للتحديث
-        // ApiService.updateUserProfile يعيد كائن Profile بناءً على تعريفه السابق
-        final updatedProfile = await _apiService.updateUserProfile(_token!, profileData);
-        print(updatedProfile);
-
-        // بعد نجاح التحديث، أعد جلب كامل بيانات المستخدم لضمان مزامنة جميع الحقول والعلاقات.
-        // هذا هو الأسلوب الأكثر موثوقية لتحديث الواجهة بعد التعديل.
-        // استدعاء fetchCurrentUser على مثيل ApiService وتمرير التوكن
-        await _apiService.fetchCurrentUser(_token!); // <--- التصحيح هنا
-
-
-        _error = null;
-        // حالة التحميل سيتم تعيينها إلى false في نهاية fetchCurrentUser
-
-      } on ApiException catch (e) {
-        _error = e.message;
-        _isLoading = false;
-        notifyListeners();
-        throw e;
-      } catch (e) {
-        _error = 'Failed to update profile: ${e.toString()}';
-        _isLoading = false;
-        notifyListeners();
-        throw ApiException(0, _error!);
-      }
-    }
-
-
-  /// تحديث مهارات المستخدم الحالي (مزامنة).
-  /// تستخدم مسار POST /api/v1/profile/skills.
-  /// يتم استدعاؤها من واجهة تعديل المهارات.
-  /// `skillIds` يمكن أن تكون List<int> ([1, 2, 3]) أو Map<String, Map<String, dynamic>>)
-  /// مثل: {"1": {"Stage": "مبتدئ"}, "5": {"Stage": "متقدم"}})
-  Future<void> syncUserSkills(dynamic skillsToSync) async { // <--- اسم البارامتر skillsToSync أو skillIds كلاهما صحيح
-    // تحقق من وجود التوكن
+  /// تحديث الملف الشخصي للمستخدم الحالي.
+  /// هذا التابع يستدعي API ويقوم بتحديث كائن المستخدم المحلي بالبيانات الجديدة مباشرة.
+  Future<void> updateUserProfile(Map<String, dynamic> profileData) async {
     if (_token == null) {
       throw ApiException(401, 'User not authenticated.');
     }
@@ -214,40 +133,51 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. استدعاء API لمزامنة المهارات
-      // ApiService.syncUserSkills يعيد كائن User كامل مع المهارات المحدثة بناءً على التوثيق والموديلات.
-      final updatedUserWithSkills = await _apiService.syncUserSkills(_token!, skillsToSync); // <--- استخدام البارامتر
+      // 1. استدعاء التابع المعدل في ApiService الذي يعيد كائن User كاملاً
+      final User updatedUser = (await _apiService.updateUserProfile(_token!, profileData)) as User;
 
-
-      // 2. تحديث كائن المستخدم المخزن محلياً بالبيانات الجديدة
-      _user = updatedUserWithSkills;
+      // 2. تحديث كائن المستخدم المحلي في الـ Provider بالكائن المحدث القادم من الـ API
+      _user = updatedUser;
 
       _error = null; // مسح الخطأ في حالة النجاح
-      _isLoading = false;
-      notifyListeners();
 
     } on ApiException catch (e) {
       _error = e.message;
-      _isLoading = false;
-      notifyListeners();
-      throw e;
+      // لا ترمي الخطأ هنا ما لم تكن الواجهة بحاجة ماسة لمعالجته بشكل خاص
     } catch (e) {
-      _error = 'Failed to sync skills: ${e.toString()}';
+      _error = 'Failed to update profile: ${e.toString()}';
+    } finally {
+      // 3. تأكد من إيقاف التحميل وإعلام الواجهة بالتغييرات في جميع الحالات
       _isLoading = false;
       notifyListeners();
-      throw ApiException(0, _error!);
     }
   }
 
-// --- توابع Authentication (معالجة الأخطاء فيها كانت ناقصة، تم إضافتها الآن) ---
-// ... (التوابع register, login, logout مع إضافة _error = null; و try-catch و notifyListeners في المكان الصحيح) ...
+  // **** نهاية التعديل المطلوب ****
 
-// --- توابع أخرى (إذا كانت موجودة في هذا Provider) ---
-// ... (مثال: جلب بيانات المستخدم الحالي FetchCurrentUser موجود بالفعل) ...
+  /// تحديث مهارات المستخدم الحالي (مزامنة).
+  Future<void> syncUserSkills(dynamic skillsToSync) async {
+    if (_token == null) {
+      throw ApiException(401, 'User not authenticated.');
+    }
 
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
 
-// ملاحظة: copyWith في موديل User ضروري إذا كنت تقوم بتحديث أجزاء من _user يدوياً.
-// إذا كنت دائماً تعيد تعيين _user بكائن كامل (مثل fetchCurrentUser أو API يعيد User كامل)،
-// فقد لا تحتاج لـ copyWith في كلاس User.
-
+    try {
+      final updatedUserWithSkills = await _apiService.syncUserSkills(_token!, skillsToSync);
+      _user = updatedUserWithSkills; // تحديث المستخدم المحلي بالمهارات الجديدة
+      _error = null;
+    } on ApiException catch (e) {
+      _error = e.message;
+      throw e;
+    } catch (e) {
+      _error = 'Failed to sync skills: ${e.toString()}';
+      throw ApiException(0, _error!);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

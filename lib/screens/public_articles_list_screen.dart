@@ -1,14 +1,17 @@
+// lib/screens/public_articles_list_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/public_article_provider.dart';
-import '../models/article.dart'; // تأكد من المسار
-import 'article_detail_screen.dart'; // تأكد من المسار
+import 'package:intl/intl.dart'; // لتنسيق التاريخ
+import '../../providers/public_article_provider.dart';
+import '../../models/article.dart';
+// import 'article_details_screen.dart'; // شاشة لعرض تفاصيل المقال (سنحتاج لإنشائها)
 
 class PublicArticlesListScreen extends StatefulWidget {
-  const PublicArticlesListScreen({Key? key}) : super(key: key);
+  const PublicArticlesListScreen({super.key});
 
   @override
-  _PublicArticlesListScreenState createState() => _PublicArticlesListScreenState();
+  State<PublicArticlesListScreen> createState() => _PublicArticlesListScreenState();
 }
 
 class _PublicArticlesListScreenState extends State<PublicArticlesListScreen> {
@@ -17,14 +20,20 @@ class _PublicArticlesListScreenState extends State<PublicArticlesListScreen> {
   @override
   void initState() {
     super.initState();
-    // جلب المقالات عند تهيئة الشاشة
-    Provider.of<PublicArticleProvider>(context, listen: false).fetchArticles();
+    final provider = Provider.of<PublicArticleProvider>(context, listen: false);
 
-    // إضافة مستمع للتمرير اللانهائي
+    // جلب الصفحة الأولى
+    // تأكد من أن القائمة فارغة قبل الجلب لتجنب تراكم البيانات عند العودة للشاشة
+    if (provider.articles.isEmpty) {
+      provider.fetchArticles();
+    }
+
+    // مستمع للتمرير لجلب المزيد
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
-        // المستخدم وصل لنهاية القائمة، جلب المزيد
-        Provider.of<PublicArticleProvider>(context, listen: false).fetchMoreArticles();
+      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+        if (provider.hasMorePages && !provider.isFetchingMore) {
+          provider.fetchMoreArticles();
+        }
       }
     });
   }
@@ -37,45 +46,126 @@ class _PublicArticlesListScreenState extends State<PublicArticlesListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // الاستماع لحالة Provider
-    final articleProvider = Provider.of<PublicArticleProvider>(context);
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('المقالات'),
+        title: const Text('المقالات والأخبار'),
       ),
-      body: articleProvider.isLoading && articleProvider.articles.isEmpty // التحميل الأولي
-          ? const Center(child: CircularProgressIndicator())
-          : articleProvider.error != null // عرض الخطأ
-          ? Center(child: Text('Error: ${articleProvider.error}'))
-          : articleProvider.articles.isEmpty // لا توجد بيانات
-          ? const Center(child: Text('لا توجد مقالات متاحة حالياً.'))
-          : ListView.builder(
-        controller: _scrollController, // ربط الـ ScrollController
-        itemCount: articleProvider.articles.length + (articleProvider.isFetchingMore ? 1 : 0), // إضافة عنصر تحميل في النهاية
-        itemBuilder: (context, index) {
-          // عرض عنصر التحميل في النهاية
-          if (index == articleProvider.articles.length) {
+      body: Consumer<PublicArticleProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading && provider.articles.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // عرض بيانات المقال
-          final article = articleProvider.articles[index];
-          return ListTile(
-            title: Text(article.title ?? 'بدون عنوان'),
-            subtitle: Text(article.description?.split('\n')[0] ?? 'لا يوجد وصف'), // عرض السطر الأول من الوصف
-            trailing: Text(article.date?.toString().split(' ')[0] ?? ''), // عرض التاريخ فقط
-            onTap: () {
-              // الانتقال إلى شاشة تفاصيل المقال
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ArticleDetailScreen(articleId: article.articleId!),
-                ),
-              );
-            },
+          if (provider.error != null && provider.articles.isEmpty) {
+            return Center(child: Text('حدث خطأ: ${provider.error}'));
+          }
+
+          if (provider.articles.isEmpty) {
+            return const Center(child: Text('لا توجد مقالات متاحة حالياً.'));
+          }
+
+          return RefreshIndicator(
+            onRefresh: () => provider.fetchArticles(),
+            child: ListView.builder(
+              controller: _scrollController,
+              itemCount: provider.articles.length + (provider.isFetchingMore ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == provider.articles.length) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                final article = provider.articles[index];
+                return _buildArticleCard(context, article);
+              },
+            ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildArticleCard(BuildContext context, Article article) {
+    // !!! استبدل هذا الرابط بعنوان موقعك الأساسي !!!
+    const String baseUrl = 'https://powderblue-woodpecker-887296.hostingersite.com';
+    final imageUrl = (article.articlePhoto != null && article.articlePhoto!.isNotEmpty)
+        ? baseUrl + article.articlePhoto!
+        : null;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      elevation: 3,
+      clipBehavior: Clip.antiAlias, // لقص الصورة لتناسب زوايا البطاقة
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: InkWell(
+        onTap: () {
+          // TODO: الانتقال إلى شاشة تفاصيل المقال
+          // Navigator.push(context, MaterialPageRoute(builder: (context) => ArticleDetailsScreen(article: article)));
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // صورة المقال
+            if (imageUrl != null)
+              Image.network(
+                imageUrl,
+                height: 200,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                const Center(child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey)),
+              ),
+
+            // محتوى البطاقة
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    article.title ?? 'بدون عنوان',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    article.description ?? '',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const Divider(height: 24),
+                  Row(
+                    children: [
+                      // كاتب المقال
+                      if (article.user != null) ...[
+                        CircleAvatar(
+                          radius: 15,
+                          // backgroundImage: NetworkImage(...) إذا كان للمستخدم صورة
+                          child: Text(article.user!.firstName?.substring(0,1) ?? '?'),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${article.user!.firstName} ${article.user!.lastName}',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                      const Spacer(),
+                      // تاريخ النشر
+                      if (article.date != null)
+                        Text(
+                          DateFormat.yMMMd('ar').format(article.date!), // تنسيق عربي للتاريخ
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                    ],
+                  )
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

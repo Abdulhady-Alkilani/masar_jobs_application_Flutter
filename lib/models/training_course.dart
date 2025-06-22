@@ -62,6 +62,16 @@ class TrainingCourse {
     );
   }
 
+  get hours => null;
+
+  get status => null;
+
+  get description => null;
+
+  get skills => null;
+
+  get type => null;
+
   // Optional: toJson for creating/updating courses (Manager/Consultant/Admin)
   Map<String, dynamic> toJson() {
     // Note: JSON keys might have spaces or unconventional names

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../models/article.dart';
-import '../models/paginated_response.dart';
 import '../services/api_service.dart';
 
 class PublicArticleProvider extends ChangeNotifier {

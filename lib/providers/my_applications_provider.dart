@@ -53,7 +53,6 @@ class MyApplicationsProvider extends ChangeNotifier {
         throw ApiException(401, 'User not authenticated.');
       }
       final newApplication = await _apiService.applyForJob(token, jobId, description: description, cvPath: cvPath);
-      print(newApplication);
 
       // إضافة الطلب الجديد إلى القائمة المحلية وتحديثها
       _applications.add(newApplication);

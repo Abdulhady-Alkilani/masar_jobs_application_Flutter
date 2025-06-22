@@ -1,20 +1,31 @@
+// lib/models/recommendation_response.dart
+
 import 'job_opportunity.dart';
 import 'training_course.dart';
 
 class RecommendationResponse {
-  final List<JobOpportunity>? recommendedJobs;
-  final List<TrainingCourse>? recommendedCourses;
+  final List<JobOpportunity> jobOpportunities;
+  final List<TrainingCourse> trainingCourses; // <--- تأكد أن الاسم هنا بصيغة الجمع
 
-  RecommendationResponse({this.recommendedJobs, this.recommendedCourses});
+  RecommendationResponse({
+    required this.jobOpportunities,
+    required this.trainingCourses, // <--- وهنا أيضاً
+  });
 
   factory RecommendationResponse.fromJson(Map<String, dynamic> json) {
+    List<T> _parseList<T>(String key, Function fromJson) {
+      if (json[key] != null && json[key] is List) {
+        return (json[key] as List)
+            .map((item) => fromJson(item as Map<String, dynamic>))
+            .toList()
+            .cast<T>();
+      }
+      return [];
+    }
+
     return RecommendationResponse(
-      recommendedJobs: (json['recommended_jobs'] as List<dynamic>?)
-          ?.map((j) => JobOpportunity.fromJson(j as Map<String, dynamic>))
-          .toList(),
-      recommendedCourses: (json['recommended_courses'] as List<dynamic>?)
-          ?.map((c) => TrainingCourse.fromJson(c as Map<String, dynamic>))
-          .toList(),
+      jobOpportunities: _parseList<JobOpportunity>('job_opportunities', (json) => JobOpportunity.fromJson(json)),
+      trainingCourses: _parseList<TrainingCourse>('training_courses', (json) => TrainingCourse.fromJson(json)), // <--- وهنا أيضاً
     );
   }
 }
