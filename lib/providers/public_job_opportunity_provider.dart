@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/job_opportunity.dart';
+import '../models/paginated_response.dart';
 import '../services/api_service.dart';
 
 class PublicJobOpportunityProvider extends ChangeNotifier {
@@ -18,23 +19,8 @@ class PublicJobOpportunityProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<JobOpportunity>
-  List<JobOpportunity> _convertDynamicListToJobOpportunityList(List<dynamic>? data) {
-    if (data == null) return [];
-    List<JobOpportunity> jobList = [];
-    for (final item in data) {
-      if (item is Map<String, dynamic>) {
-        try {
-          jobList.add(JobOpportunity.fromJson(item));
-        } catch (e) {
-          print('Error parsing individual JobOpportunity item: $e for item $item');
-        }
-      } else {
-        print('Skipping unexpected item type in JobOpportunity list: $item');
-      }
-    }
-    return jobList;
-  }
+  // **تم حذف التابع المساعد _convertDynamicListToJobOpportunityList**
+
 
   // جلب أول صفحة من فرص العمل العامة
   Future<void> fetchJobOpportunities({int page = 1}) async {
@@ -45,9 +31,10 @@ class PublicJobOpportunityProvider extends ChangeNotifier {
     try {
       // هذا المسار عام لا يتطلب توكن
       final paginatedResponse = await _apiService.fetchJobOpportunities(page: page);
+      // print('Fetched initial public jobs response: $paginatedResponse'); // Debug print
 
-      // استخدم التابع المساعد للتحويل الآمن
-      _jobs = _convertDynamicListToJobOpportunityList(paginatedResponse.data);
+      // **استخدام PaginatedResponse.data مباشرة**
+      _jobs = paginatedResponse.data ?? [];
 
 
       _currentPage = paginatedResponse.currentPage ?? 1;
@@ -77,8 +64,8 @@ class PublicJobOpportunityProvider extends ChangeNotifier {
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchJobOpportunities(page: nextPage);
 
-      // استخدم التابع المساعد للتحويل الآمن للإضافة
-      _jobs.addAll(_convertDynamicListToJobOpportunityList(paginatedResponse.data));
+      // **استخدام PaginatedResponse.data مباشرة**
+      _jobs.addAll(paginatedResponse.data ?? []);
 
 
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
@@ -103,12 +90,12 @@ class PublicJobOpportunityProvider extends ChangeNotifier {
     }
 
     // إذا لم توجد في القائمة، اذهب لجلبه من API العام
-    // لا نغير حالة التحميل الرئيسية هنا، يمكن استخدام حالة تحميل منفصلة إذا لزم الأمر
+    // لا نغير حالة التحميل الرئيسية هنا، يمكن استخدام حالة تحميل منفصلة
     // setState(() { _isFetchingSingleJob = true; }); notifyListeners();
 
     try {
       final job = await _apiService.fetchJobOpportunity(jobId);
-      // لا تضيفه للقائمة لتجنب تكرار العناصر أو خلط صفحات
+      // لا تضيفه للقائمة
       return job;
     } on ApiException catch (e) {
       print('API Exception during fetchSinglePublicJobOpportunity: ${e.message}');

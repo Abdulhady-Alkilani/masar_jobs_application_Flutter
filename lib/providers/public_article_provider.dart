@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/article.dart';
+import '../models/paginated_response.dart'; // تأكد من المسار
 import '../services/api_service.dart';
+// لا تحتاج AuthProvider هنا لأن المسارات عامة
+// import '../providers/auth_provider.dart';
+// import 'package:provider/provider.dart';
+
 
 class PublicArticleProvider extends ChangeNotifier {
   List<Article> _articles = [];
@@ -16,46 +22,26 @@ class PublicArticleProvider extends ChangeNotifier {
   bool get isFetchingMore => _isFetchingMore;
   bool get hasMorePages => _lastPage == null || _currentPage < _lastPage!;
 
+
   final ApiService _apiService = ApiService();
 
-  // تابع مساعدة للتحويل الآمن والمتحكم به من List<dynamic> إلى List<Article>
-  List<Article> _convertDynamicListToArticleList(List<dynamic>? data) {
-    if (data == null) return []; // إذا كانت القائمة الأصلية null، أعد قائمة فارغة
-
-    List<Article> articleList = [];
-    for (final item in data) {
-      // تحقق مما إذا كان العنصر هو خريطة قبل محاولة فك ترميزه كـ Article
-      if (item is Map<String, dynamic>) {
-        try {
-          // حاول فك ترميز العنصر كـ Article
-          articleList.add(Article.fromJson(item));
-        } catch (e) {
-          // إذا فشل فك ترميز عنصر واحد، قم بتسجيل الخطأ وتجاهل هذا العنصر
-          print('Error parsing individual Article item in public list: $e for item $item');
-        }
-      } else {
-        // إذا لم يكن العنصر خريطة، قم بتسجيل الخطأ وتجاهله
-        print('Skipping unexpected item type in public Article list: $item');
-      }
-    }
-    return articleList; // أعد القائمة التي تم بناؤها بأمان
-  }
+  // **احذف هذا التابع المساعد**:
+  // List<Article> _convertDynamicListToArticleList(List<dynamic>? data) { ... }
 
 
-  // جلب أول صفحة من المقالات
+  // جلب أول صفحة من المقالات العامة
   Future<void> fetchArticles({int page = 1}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      // هنا لا نحتاج لتوكن لأن المسار عام
       final paginatedResponse = await _apiService.fetchArticles(page: page);
       // print('Fetched initial public articles response: $paginatedResponse'); // Debug print
 
-
-      // استخدم التابع المساعد للتحويل الآمن
-      _articles = _convertDynamicListToArticleList(paginatedResponse.data);
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة الآن
+      // لأن التحويل الآمن أصبح يتم داخل PaginatedResponse.fromJson
+      _articles = paginatedResponse.data ?? [];
 
 
       _currentPage = paginatedResponse.currentPage ?? 1;
@@ -75,20 +61,20 @@ class PublicArticleProvider extends ChangeNotifier {
 
   // جلب الصفحات التالية من المقالات
   Future<void> fetchMoreArticles() async {
-    if (!hasMorePages || _isFetchingMore) return;
+    // لا تجلب المزيد إذا كنت تحمل بالفعل أو لا يوجد المزيد من الصفحات
+    if (_isFetchingMore || !hasMorePages) return;
 
     _isFetchingMore = true;
-    _error = null; // قد لا تريد مسح الخطأ هنا
+    // _error = null; // قد لا تريد مسح الخطأ هنا
     notifyListeners();
 
     try {
-      // هنا لا نحتاج لتوكن لأن المسار عام
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchArticles(page: nextPage);
       // print('Fetched more public articles response: $paginatedResponse'); // Debug print
 
-      // استخدم التابع المساعد للتحويل الآمن للإضافة
-      _articles.addAll(_convertDynamicListToArticleList(paginatedResponse.data));
+      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة الآن
+      _articles.addAll(paginatedResponse.data ?? []);
 
 
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
@@ -106,34 +92,34 @@ class PublicArticleProvider extends ChangeNotifier {
 
   // جلب تفاصيل مقال محدد
   Future<Article?> fetchArticle(int articleId) async {
-    // تحقق مما إذا كان المقال موجوداً بالفعل في القائمة المحملة
+    // حاول إيجاد المقال في القائمة المحملة حالياً أولاً
     final existingArticle = _articles.firstWhereOrNull((article) => article.articleId == articleId);
     if (existingArticle != null) {
       return existingArticle;
     }
 
-    // إذا لم يكن موجوداً في القائمة، اذهب لجلبه من الـ API
-    // حالة تحميل منفصلة لجلب عنصر فردي (اختياري)
-    // setState(() { _isFetchingSingleArticle = true; }); notifyListeners();
+    // إذا لم يوجد في القائمة، اذهب لجلبه من الـ API العام
+    // لا نغير حالة التحميل الرئيسية هنا لعدم التأثير على عرض القائمة الرئيسية
+    // bool _isFetchingSingleArticle = false; // تعريف حالة تحميل فردية إذا لزم الأمر
 
     try {
-      // هنا لا نحتاج لتوكن لأن المسار عام
+      // هذا المسار عام لا يتطلب توكن
       final article = await _apiService.fetchArticle(articleId);
       // لا تضيفه للقائمة هنا لتجنب تكرار العناصر في القائمة الرئيسية المصفحة
       return article;
     } on ApiException catch (e) {
       print('API Exception during fetchSinglePublicArticle: ${e.message}');
-      _error = e.message; // يمكن تعيين الخطأ العام إذا فشل جلب التفاصيل
-      return null;
+      _error = e.message; // يمكن تعيين الخطأ العام هنا إذا فشل جلب التفاصيل
+      return null; // أعد null للإشارة إلى الفشل
     } catch (e) {
       print('Unexpected error during fetchSinglePublicArticle: ${e.toString()}');
       _error = 'Failed to load article details: ${e.toString()}';
-      return null;
+      return null; // أعد null للإشارة إلى الفشل
     } finally {
+      // يمكن تحديث حالة تحميل العنصر الفردي هنا
       // setState(() { _isFetchingSingleArticle = false; }); notifyListeners();
     }
   }
-
 }
 
 // Simple extension to mimic firstWhereOrNull if not using collection package

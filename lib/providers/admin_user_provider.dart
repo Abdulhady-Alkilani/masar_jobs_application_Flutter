@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/user.dart';
-import '../models/paginated_response.dart';
-import '../services/api_service.dart';
-import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
+import '../models/user.dart'; // تأكد من المسار
+import '../models/paginated_response.dart'; // تأكد من المسار
+import '../services/api_service.dart'; // تأكد من المسار
+import '../providers/auth_provider.dart'; // تأكد من المسار
 
 
 class AdminUserProvider extends ChangeNotifier {
@@ -24,20 +24,25 @@ class AdminUserProvider extends ChangeNotifier {
 
   // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<User>
   List<User> _convertDynamicListToUserList(List<dynamic>? data) {
-    if (data == null) return [];
+    if (data == null) return []; // إذا كانت القائمة الأصلية null، أعد قائمة فارغة
+
     List<User> userList = [];
     for (final item in data) {
+      // تحقق مما إذا كان العنصر هو خريطة قبل محاولة فك ترميزه كـ User
       if (item is Map<String, dynamic>) {
         try {
+          // حاول فك ترميز العنصر كـ User
           userList.add(User.fromJson(item));
         } catch (e) {
+          // إذا فشل فك ترميز عنصر واحد، قم بتسجيل الخطأ وتجاهل هذا العنصر
           print('Error parsing individual User item: $e for item $item');
         }
       } else {
+        // إذا لم يكن العنصر خريطة، قم بتسجيل الخطأ وتجاهله
         print('Skipping unexpected item type in User list: $item');
       }
     }
-    return userList;
+    return userList; // أعد القائمة التي تم بناؤها بأمان
   }
 
 
@@ -64,10 +69,10 @@ class AdminUserProvider extends ChangeNotifier {
 
     } on ApiException catch (e) {
       _error = e.message;
-      print('API Exception during fetchAllUsers: ${e.toString()}');
+      print('API Exception during fetchAllUsersAdmin: ${e.toString()}');
     } catch (e) {
       _error = 'Failed to load users: ${e.toString()}';
-      print('Unexpected error during fetchAllUsers: ${e.toString()}');
+      print('Unexpected error during fetchAllUsersAdmin: ${e.toString()}');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -76,6 +81,7 @@ class AdminUserProvider extends ChangeNotifier {
 
   // جلب الصفحات التالية من المستخدمين
   Future<void> fetchMoreUsers(BuildContext context) async {
+    // لا تجلب المزيد إذا كنت تحمل بالفعل أو لا يوجد المزيد من الصفحات
     if (!hasMorePages || _isFetchingMore) return;
 
     _isFetchingMore = true;
@@ -88,7 +94,6 @@ class AdminUserProvider extends ChangeNotifier {
 
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchAllUsers(token, page: nextPage);
-      // print('Fetched more admin users response: $paginatedResponse'); // Debug print
 
       // استخدم التابع المساعد للتحويل الآمن للإضافة
       _users.addAll(_convertDynamicListToUserList(paginatedResponse.data));
@@ -109,33 +114,35 @@ class AdminUserProvider extends ChangeNotifier {
 
   // جلب مستخدم واحد بواسطة الأدمن (لشاشة التفاصيل)
   Future<User?> fetchSingleUser(BuildContext context, int userId) async {
-    // حاول إيجاد المستخدم في القائمة المحملة حالياً
+    // حاول إيجاد المستخدم في القائمة المحملة حالياً أولاً
     final existingUser = _users.firstWhereOrNull((user) => user.userId == userId);
     if (existingUser != null) {
       return existingUser;
     }
 
     // إذا لم يوجد في القائمة، اذهب لجلبه من API
-    // لا نغير حالة التحميل الرئيسية هنا، يمكن استخدام حالة تحميل منفصلة
-    // setState(() { _isFetchingSingleUser = true; }); notifyListeners();
+    // لا نغير حالة التحميل الرئيسية هنا
+    // bool _isFetchingSingleUser = false; // تعريف حالة تحميل فردية إذا لزم الأمر
 
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
+      // استخدام تابع ApiService لجلب مستخدم واحد
       final user = await _apiService.fetchSingleUserAdmin(token, userId);
       // لا تضيفه للقائمة هنا لتجنب خلط Pagination
 
       return user;
     } on ApiException catch (e) {
       print('API Exception during fetchSingleAdminUser: ${e.message}');
-      _error = e.message; // يمكن تعيين الخطأ العام
-      return null;
+      _error = e.message; // يمكن تعيين الخطأ العام هنا إذا فشل جلب التفاصيل
+      return null; // أعد null للإشارة إلى الفشل
     } catch (e) {
       print('Unexpected error during fetchSingleAdminUser: ${e.toString()}');
       _error = 'Failed to load user details: ${e.toString()}';
-      return null;
+      return null; // أعد null للإشارة إلى الفشل
     } finally {
+      // يمكن تحديث حالة تحميل العنصر الفردي هنا
       // setState(() { _isFetchingSingleUser = false; }); notifyListeners();
     }
   }
@@ -151,10 +158,12 @@ class AdminUserProvider extends ChangeNotifier {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
+      // استخدام تابع ApiService لإنشاء مستخدم
       final newUser = await _apiService.createNewUser(token, userData);
       // print('Created new user: $newUser'); // Debug print
 
-      _users.insert(0, newUser); // أضف المستخدم الجديد في بداية القائمة
+      // أضف المستخدم الجديد في بداية القائمة المحلية
+      _users.insert(0, newUser);
 
     } on ApiException catch (e) {
       _error = e.message;
@@ -178,6 +187,7 @@ class AdminUserProvider extends ChangeNotifier {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
+      // استخدام تابع ApiService لتحديث مستخدم
       final updatedUser = await _apiService.updateUser(token, userId, userData);
       // print('Updated user: $updatedUser'); // Debug print
 
@@ -188,6 +198,7 @@ class AdminUserProvider extends ChangeNotifier {
         _users[index] = updatedUser;
       } else {
         // إذا لم يتم العثور على المستخدم في القائمة المحلية (ربما في صفحة أخرى لم يتم جلبها)، قم بإعادة جلب القائمة
+        // هذا غير فعال لقوائم كبيرة، لكنه يضمن تحديث الواجهة
         fetchAllUsers(context); // إعادة جلب لتحديث القائمة المعروضة
       }
 
@@ -213,6 +224,7 @@ class AdminUserProvider extends ChangeNotifier {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
+      // استخدام تابع ApiService لحذف مستخدم
       await _apiService.deleteUser(token, userId);
 
       // إزالة المستخدم من القائمة المحلية
@@ -229,6 +241,35 @@ class AdminUserProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+
+// TODO: إضافة توابع جلب الموارد المرتبطة بمستخدم (للأدمن) إذا لزم الأمر
+// بناءً على AdminUserDetailScreen، أنت تعرض:
+// - طلبات التوظيف (MyApplications)
+// - تسجيلات الدورات (MyEnrollments)
+// - فرص العمل التي أنشأها (ManagedJobs)
+// - الدورات التي أنشأها (ManagedCourses)
+// - المقالات التي أنشأها (ManagedArticles)
+// ستحتاج توابع في AdminUserProvider (أو Providers أخرى) لجلب هذه القوائم الخاصة بمستخدم محدد (userId)
+// وربما تابع في ApiService لكل نوع resource لجلبها بناءً على user_id.
+// (مثال: ApiService.fetchUserApplicationsAdmin(token, userId))
+
+
+// TODO: إضافة توابع جلب فرص العمل لشركة محددة (بواسطة الأدمن) - تم تنفيذها بالفعل في هذا الملف
+// Future<void> fetchJobsByCompany(BuildContext context, int companyId, {int page = 1}) { ... }
+// TODO: أضف تابع fetchMoreJobsByCompany (إذا لزم التمرير اللانهائي)
+/*
+  Future<void> fetchMoreJobsByCompany(BuildContext context, int companyId) async { ... }
+  */
+
+
+// TODO: إضافة توابع جلب الدورات لشركة محددة (بواسطة الأدمن) - مشابهة لوظائف الشركة
+/*
+  Future<void> fetchCoursesByCompany(BuildContext context, int companyId, {int page = 1}) async { ... }
+  Future<void> fetchMoreCoursesByCompany(BuildContext context, int companyId) async { ... }
+  */
+
+
 }
 
 // Simple extension for List<User>

@@ -22,26 +22,10 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<JobOpportunity>
-  List<JobOpportunity> _convertDynamicListToJobOpportunityList(List<dynamic>? data) {
-    if (data == null) return [];
-    List<JobOpportunity> jobList = [];
-    for (final item in data) {
-      if (item is Map<String, dynamic>) {
-        try {
-          jobList.add(JobOpportunity.fromJson(item));
-        } catch (e) {
-          print('Error parsing individual JobOpportunity item: $e for item $item');
-        }
-      } else {
-        print('Skipping unexpected item type in JobOpportunity list: $item');
-      }
-    }
-    return jobList;
-  }
+  // **تم حذف التابع المساعد _convertDynamicListToJobOpportunityList**
 
 
-  // جلب فرص العمل التي نشرها المدير - الصفحة الأولى
+  // جلب فرص العمل التي نشرها المدير
   Future<void> fetchManagedJobs(BuildContext context) async {
     _isLoading = true;
     _error = null;
@@ -59,8 +43,8 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
       final paginatedResponse = await _apiService.fetchManagedJobs(token!, page: 1);
       // print('Fetched initial managed jobs response: $paginatedResponse'); // Debug print
 
-      // استخدم التابع المساعد للتحويل الآمن
-      _managedJobs = _convertDynamicListToJobOpportunityList(paginatedResponse.data);
+      // **استخدام PaginatedResponse.data مباشرة**
+      _managedJobs = paginatedResponse.data ?? [];
 
 
       _currentPage = paginatedResponse.currentPage ?? 1;
@@ -78,7 +62,6 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
     }
   }
 
-  // جلب الصفحات التالية من فرص العمل
   Future<void> fetchMoreManagedJobs(BuildContext context) async {
     if (!hasMorePages || _isFetchingMore) return;
 
@@ -88,15 +71,13 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
 
     try {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
-      if (token == null) {
-        throw ApiException(401, 'User not authenticated.');
-      }
-      final nextPage = _currentPage + 1;
-      // استدعاء تابع fetchManagedJobs في ApiService مع رقم الصفحة التالية
-      final paginatedResponse = await _apiService.fetchManagedJobs(token, page: nextPage); // <--- التصحيح هنا
+      if (token == null) throw ApiException(401, 'User not authenticated.');
 
-      // استخدم التابع المساعد للتحويل الآمن للإضافة
-      _managedJobs.addAll(_convertDynamicListToJobOpportunityList(paginatedResponse.data));
+      final nextPage = _currentPage + 1;
+      final paginatedResponse = await _apiService.fetchManagedJobs(token, page: nextPage);
+
+      // **استخدام PaginatedResponse.data مباشرة**
+      _managedJobs.addAll(paginatedResponse.data ?? []);
 
 
       _currentPage = paginatedResponse.currentPage ?? _currentPage;

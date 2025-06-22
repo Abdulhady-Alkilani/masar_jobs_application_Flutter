@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/job_opportunity.dart';
 import '../models/paginated_response.dart';
 import '../services/api_service.dart';
 import '../providers/auth_provider.dart';
-import 'package:provider/provider.dart';
 
 
 class AdminJobProvider extends ChangeNotifier {
@@ -74,7 +74,7 @@ class AdminJobProvider extends ChangeNotifier {
     }
   }
 
-  // جلب الصفحات التالية من فرص العمل
+  // جلب الصفحات التالية من فرص العمل العامة
   Future<void> fetchMoreJobs(BuildContext context) async {
     if (!hasMorePages || _isFetchingMore) return;
 
@@ -122,8 +122,9 @@ class AdminJobProvider extends ChangeNotifier {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
+      // استدعاء تابع ApiService لجلب وظيفة واحدة للأدمن
       final job = await _apiService.fetchSingleJobAdmin(token, jobId);
-      // لا تضيفه للقائمة هنا
+      // لا تضيفه للقائمة هنا لتجنب خلط Pagination
 
       return job;
     } on ApiException catch (e) {
@@ -242,9 +243,7 @@ class AdminJobProvider extends ChangeNotifier {
       if (token == null) throw ApiException(401, 'User not authenticated.');
       // Optional: check user type is Admin
 
-      // TODO: إضافة تابع fetchJobsByCompanyAdmin(String token, int companyId, {int page}) إلى ApiService
-      // هذا التابع في ApiService سيستدعي مسار API مثل /admin/companies/{companyId}/jobs أو /admin/jobs?company_id={companyId}
-      // For now, let's use a placeholder call
+      // استدعاء تابع ApiService لجلب الوظائف بفلتر الشركة
       final paginatedResponse = await _apiService.fetchJobsByCompanyAdmin(token!, companyId, page: page);
 
 
@@ -268,22 +267,38 @@ class AdminJobProvider extends ChangeNotifier {
   }
 
 // TODO: أضف تابع fetchMoreJobsByCompany لنفس الغرض (للتمرير اللانهائي في قائمة وظائف شركة محددة)
-/*
+
+  /// تابع جلب المزيد من فرص العمل لشركة محددة (بواسطة الأدمن)
   Future<void> fetchMoreJobsByCompany(BuildContext context, int companyId) async {
-       if (!hasMorePages || _isFetchingMore) return;
-       _isFetchingMore = true; notifyListeners();
-       try {
-           final token = Provider.of<AuthProvider>(context, listen: false).token;
-           if (token == null) throw ApiException(401, 'User not authenticated.');
-           final nextPage = _currentPage + 1;
-           // TODO: استدعاء تابع fetchJobsByCompanyAdmin في ApiService
-           final paginatedResponse = await _apiService.fetchJobsByCompanyAdmin(token, companyId, page: nextPage);
-           _jobs.addAll(_convertDynamicListToJobOpportunityList(paginatedResponse.data));
-           _currentPage = paginatedResponse.currentPage ?? _currentPage;
-           _lastPage = paginatedResponse.lastPage;
-       } catch(e) { ... } finally { _isFetchingMore = false; notifyListeners(); }
+    if (!hasMorePages || _isFetchingMore) return;
+
+    _isFetchingMore = true;
+    // _error = null; // قد لا تريد مسح الخطأ هنا
+    notifyListeners();
+
+    try {
+      final token = Provider.of<AuthProvider>(context, listen: false).token;
+      if (token == null) throw ApiException(401, 'User not authenticated.');
+
+      final nextPage = _currentPage + 1;
+      // استدعاء تابع ApiService لجلب الوظائف بفلتر الشركة
+      final paginatedResponse = await _apiService.fetchJobsByCompanyAdmin(token, companyId, page: nextPage);
+
+      // استخدم التابع المساعد للتحويل الآمن للإضافة
+      _jobs.addAll(_convertDynamicListToJobOpportunityList(paginatedResponse.data));
+
+
+      _currentPage = paginatedResponse.currentPage ?? _currentPage;
+      _lastPage = paginatedResponse.lastPage;
+    } on ApiException catch (e) {
+      print('API Exception during fetchMoreJobsByCompanyAdmin: ${e.message}');
+    } catch(e) {
+      print('Unexpected error during fetchMoreJobsByCompanyAdmin: ${e.toString()}');
+    } finally {
+      _isFetchingMore = false;
+      notifyListeners();
+    }
   }
-  */
 
 
 }

@@ -22,23 +22,7 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<TrainingCourse>
-  List<TrainingCourse> _convertDynamicListToTrainingCourseList(List<dynamic>? data) {
-    if (data == null) return [];
-    List<TrainingCourse> courseList = [];
-    for (final item in data) {
-      if (item is Map<String, dynamic>) {
-        try {
-          courseList.add(TrainingCourse.fromJson(item));
-        } catch (e) {
-          print('Error parsing individual TrainingCourse item: $e for item $item');
-        }
-      } else {
-        print('Skipping unexpected item type in TrainingCourse list: $item');
-      }
-    }
-    return courseList;
-  }
+  // **تم حذف التابع المساعد _convertDynamicListToTrainingCourseList**
 
 
   // جلب الدورات التي نشرها المستخدم (المدير أو الاستشاري)
@@ -59,8 +43,8 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
       final paginatedResponse = await _apiService.fetchManagedCourses(token!, page: 1);
       // print('Fetched initial managed courses response: $paginatedResponse'); // Debug print
 
-      // استخدم التابع المساعد للتحويل الآمن
-      _managedCourses = _convertDynamicListToTrainingCourseList(paginatedResponse.data);
+      // **استخدام PaginatedResponse.data مباشرة**
+      _managedCourses = paginatedResponse.data ?? [];
 
 
       _currentPage = paginatedResponse.currentPage ?? 1;
@@ -92,8 +76,8 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchManagedCourses(token, page: nextPage);
 
-      // استخدم التابع المساعد للتحويل الآمن للإضافة
-      _managedCourses.addAll(_convertDynamicListToTrainingCourseList(paginatedResponse.data));
+      // **استخدام PaginatedResponse.data مباشرة**
+      _managedCourses.addAll(paginatedResponse.data ?? []);
 
 
       _currentPage = paginatedResponse.currentPage ?? _currentPage;

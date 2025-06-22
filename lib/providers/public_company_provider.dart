@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/company.dart';
+import '../models/paginated_response.dart';
 import '../services/api_service.dart';
 
 
@@ -19,23 +20,7 @@ class PublicCompanyProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<Company>
-  List<Company> _convertDynamicListToCompanyList(List<dynamic>? data) {
-    if (data == null) return [];
-    List<Company> companyList = [];
-    for (final item in data) {
-      if (item is Map<String, dynamic>) {
-        try {
-          companyList.add(Company.fromJson(item));
-        } catch (e) {
-          print('Error parsing individual Company item: $e for item $item');
-        }
-      } else {
-        print('Skipping unexpected item type in Company list: $item');
-      }
-    }
-    return companyList;
-  }
+  // **تم حذف التابع المساعد _convertDynamicListToCompanyList**
 
 
   // جلب أول صفحة من الشركات العامة
@@ -48,8 +33,8 @@ class PublicCompanyProvider extends ChangeNotifier {
       // هذا المسار عام لا يتطلب توكن
       final paginatedResponse = await _apiService.fetchCompanies(page: page);
 
-      // استخدم التابع المساعد للتحويل الآمن
-      _companies = _convertDynamicListToCompanyList(paginatedResponse.data);
+      // **استخدام PaginatedResponse.data مباشرة**
+      _companies = paginatedResponse.data ?? [];
 
 
       _currentPage = paginatedResponse.currentPage ?? 1;
@@ -79,8 +64,8 @@ class PublicCompanyProvider extends ChangeNotifier {
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchCompanies(page: nextPage);
 
-      // استخدم التابع المساعد للتحويل الآمن للإضافة
-      _companies.addAll(_convertDynamicListToCompanyList(paginatedResponse.data));
+      // **استخدام PaginatedResponse.data مباشرة**
+      _companies.addAll(paginatedResponse.data ?? []);
 
 
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
