@@ -5,46 +5,39 @@ import '../models/user.dart';
 import '../services/api_service.dart';
 
 class AuthProvider extends ChangeNotifier {
-  // --- حالة المصادقة والتحميل والخطأ ---
-  User? _user; // بيانات المستخدم المسجل دخوله حاليًا
-  String? _token; // التوكن الخاص بالمستخدم المسجل دخوله حاليًا
-  bool _isLoading = false; // لحالة التحميل العامة في Provider
-  String? _error; // حقل خاص لتخزين رسالة الخطأ
+  // --- الحالة ---
+  User? _user;
+  String? _token;
+  bool _isLoading = true; // ابدأ بـ true لتجنب مشاكل التهيئة الأولية
+  String? _error;
 
-  // --- Getters للوصول إلى الحالة ---
+  // --- Getters ---
   User? get user => _user;
   String? get token => _token;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _user != null && _token != null;
   String? get error => _error;
 
-  // --- مثيل خدمة API ---
   final ApiService _apiService = ApiService();
 
-  // --- توابع Authentication ---
+  // --- دوال المصادقة ---
 
   /// التحقق من حالة المصادقة عند بدء التطبيق.
   Future<void> checkAuthStatus() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
     try {
       _token = await _apiService.getAuthToken();
       if (_token != null) {
         _user = await _apiService.fetchCurrentUser(_token!);
-        _error = null;
       } else {
         _user = null;
-        _error = null;
       }
     } catch (e) {
-      print('Failed to fetch user with saved token: $e');
+      print('Failed to authenticate with saved token: $e');
       await _apiService.removeAuthToken();
       _token = null;
       _user = null;
-      _error = 'Failed to authenticate with saved token.';
     } finally {
+      // بعد انتهاء كل شيء، أوقف التحميل الأولي
       _isLoading = false;
       notifyListeners();
     }
@@ -60,38 +53,74 @@ class AuthProvider extends ChangeNotifier {
       final authResponse = await _apiService.registerUser(firstName, lastName, username, email, password, passwordConfirmation, phone, type);
       _user = authResponse.user;
       _token = authResponse.accessToken;
-      _error = null;
-    } on ApiException catch (e) {
-      _error = e.message;
-      throw e;
     } catch (e) {
-      _error = 'An unexpected error occurred during registration: ${e.toString()}';
-      throw ApiException(0, _error!);
+      _user = null;
+      _token = null;
+      rethrow; // إعادة رمي الخطأ للواجهة لعرضه
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  /// تسجيل دخول المستخدم.
+  // في AuthProvider
+// في ملف: lib/providers/auth_provider.dart
+// داخل كلاس: AuthProvider
+
+  /// تسجيل دخول المستخدم مع التحقق من حالته وتتبع العملية.
   Future<void> login(String email, String password) async {
+    // الخطوة 1: إعلام الواجهة ببدء عملية التحميل
     _isLoading = true;
-    _error = null;
+    _error = null; // مسح أي أخطاء سابقة
     notifyListeners();
 
+    print("AuthProvider: 1. Login process started.");
+
     try {
+      // الخطوة 2: استدعاء API لإرسال بيانات تسجيل الدخول
+      print("AuthProvider: 2. Calling API with email: $email");
       final authResponse = await _apiService.loginUser(email, password);
+      print("AuthProvider: 3. API call successful. Received user type: ${authResponse.user?.type}, status: ${authResponse.user?.status}");
+
+      // الخطوة 3: التحقق من صلاحية الحساب (Business Logic)
+      final userStatus = authResponse.user?.status;
+
+      // التحقق إذا كان الحساب معلقاً
+      if (userStatus == 'pending') {
+        print("AuthProvider: 4a. User status is 'pending'. Aborting login.");
+        await _apiService.removeAuthToken(); // إزالة التوكن إذا كان قد تم حفظه بالخطأ
+        throw ApiException(403, 'حسابك لا يزال قيد المراجعة. يرجى الانتظار حتى يتم تفعيله.');
+      }
+
+      // التحقق إذا كان الحساب مرفوضاً أو محظوراً
+      if (userStatus == 'rejected' || userStatus == 'banned') {
+        print("AuthProvider: 4b. User status is '$userStatus'. Aborting login.");
+        await _apiService.removeAuthToken();
+        throw ApiException(403, 'تم رفض أو حظر هذا الحساب. يرجى التواصل مع الإدارة.');
+      }
+
+      // الخطوة 4: إذا تم اجتياز كل عمليات التحقق بنجاح
+      print("AuthProvider: 5. All checks passed. Storing user and token.");
       _user = authResponse.user;
       _token = authResponse.accessToken;
-      _error = null;
-    } on ApiException catch (e) {
-      _error = e.message;
-      throw e;
+
     } catch (e) {
-      _error = 'An unexpected error occurred during login: ${e.toString()}';
-      throw ApiException(0, _error!);
+      // هذا سيلتقط أي خطأ، سواء من API (مثل كلمة مرور خاطئة)
+      // أو من منطق التحقق الذي أضفناه (مثل حساب معلق)
+      print("AuthProvider: 6. Caught an error during login: $e");
+
+      // تأكد من مسح أي بيانات قديمة للمستخدم
+      _user = null;
+      _token = null;
+
+      // أعد رمي الخطأ لتتمكن الواجهة (LoginScreen) من التقاطه وعرضه
+      rethrow;
     } finally {
+      // الخطوة الأخيرة: هذا الكود سيعمل دائماً، سواء نجحت العملية أم فشلت
       _isLoading = false;
+      // طباعة الحالة النهائية للمصادقة
+      print("AuthProvider: 7. Login process finished. isAuthenticated is now: $isAuthenticated");
+      // إعلام الواجهة بانتهاء التحميل وتحديث الحالة (سواء كانت نجاحاً أو فشلاً)
       notifyListeners();
     }
   }
@@ -99,19 +128,20 @@ class AuthProvider extends ChangeNotifier {
   /// تسجيل خروج المستخدم.
   Future<void> logout() async {
     _isLoading = true;
-    _error = null;
     notifyListeners();
 
+    final oldToken = _token;
+    _user = null;
+    _token = null;
+    notifyListeners(); // أعلم الواجهة فوراً بالتغيير
+
     try {
-      if (_token != null) {
-        await _apiService.logoutUser(_token!);
+      if (oldToken != null) {
+        await _apiService.logoutUser(oldToken);
       }
     } catch (e) {
-      print('Error during logout: $e');
+      print('Error during logout API call: $e');
     } finally {
-      _user = null;
-      _token = null;
-      _error = null;
       _isLoading = false;
       notifyListeners();
     }
@@ -119,47 +149,29 @@ class AuthProvider extends ChangeNotifier {
 
   // --- توابع تحديث بيانات المستخدم ---
 
-  // **** بداية التعديل المطلوب ****
-
   /// تحديث الملف الشخصي للمستخدم الحالي.
-  /// هذا التابع يستدعي API ويقوم بتحديث كائن المستخدم المحلي بالبيانات الجديدة مباشرة.
   Future<void> updateUserProfile(Map<String, dynamic> profileData) async {
-    if (_token == null) {
-      throw ApiException(401, 'User not authenticated.');
-    }
+    if (_token == null) throw ApiException(401, 'User not authenticated.');
 
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      // 1. استدعاء التابع المعدل في ApiService الذي يعيد كائن User كاملاً
-      final User updatedUser = (await _apiService.updateUserProfile(_token!, profileData)) as User;
-
-      // 2. تحديث كائن المستخدم المحلي في الـ Provider بالكائن المحدث القادم من الـ API
+      await _apiService.updateUserProfile(_token!, profileData);
+      final updatedUser = await _apiService.fetchCurrentUser(_token!);
       _user = updatedUser;
-
-      _error = null; // مسح الخطأ في حالة النجاح
-
-    } on ApiException catch (e) {
-      _error = e.message;
-      // لا ترمي الخطأ هنا ما لم تكن الواجهة بحاجة ماسة لمعالجته بشكل خاص
     } catch (e) {
-      _error = 'Failed to update profile: ${e.toString()}';
+      rethrow;
     } finally {
-      // 3. تأكد من إيقاف التحميل وإعلام الواجهة بالتغييرات في جميع الحالات
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // **** نهاية التعديل المطلوب ****
-
-  /// تحديث مهارات المستخدم الحالي (مزامنة).
+  /// تحديث مهارات المستخدم الحالي.
   Future<void> syncUserSkills(dynamic skillsToSync) async {
-    if (_token == null) {
-      throw ApiException(401, 'User not authenticated.');
-    }
+    if (_token == null) throw ApiException(401, 'User not authenticated.');
 
     _isLoading = true;
     _error = null;
@@ -167,14 +179,9 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final updatedUserWithSkills = await _apiService.syncUserSkills(_token!, skillsToSync);
-      _user = updatedUserWithSkills; // تحديث المستخدم المحلي بالمهارات الجديدة
-      _error = null;
-    } on ApiException catch (e) {
-      _error = e.message;
-      throw e;
+      _user = updatedUserWithSkills;
     } catch (e) {
-      _error = 'Failed to sync skills: ${e.toString()}';
-      throw ApiException(0, _error!);
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();

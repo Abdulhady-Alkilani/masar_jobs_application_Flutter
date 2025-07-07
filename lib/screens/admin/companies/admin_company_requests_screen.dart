@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/admin_company_requests_provider.dart';
 import '../../../models/company.dart';
+import '../../../services/api_service.dart';
 
 class AdminCompanyRequestsScreen extends StatefulWidget {
   const AdminCompanyRequestsScreen({super.key});
@@ -13,7 +14,6 @@ class AdminCompanyRequestsScreen extends StatefulWidget {
 }
 
 class _AdminCompanyRequestsScreenState extends State<AdminCompanyRequestsScreen> {
-
   @override
   void initState() {
     super.initState();
@@ -22,16 +22,55 @@ class _AdminCompanyRequestsScreenState extends State<AdminCompanyRequestsScreen>
     });
   }
 
+  Future<void> _handleRequest(BuildContext context, Future<void> Function() action, String successMessage) async {
+    try {
+      // 1. فقط قم باستدعاء الدالة.
+      await action();
+
+      // 2. إذا وصل الكود إلى هنا، فهذا يعني أن الدالة لم ترمِ استثناءً (نجحت).
+      //    الآن تحقق فقط من أن الويدجت لا تزال موجودة قبل عرض SnackBar.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تمت العملية بنجاح!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // يمكنك إضافة أي إجراء آخر بعد النجاح هنا (مثل العودة للشاشة السابقة)
+        // Navigator.of(context).pop();
+      }
+    } on ApiException catch (e) {
+      // إذا حدث خطأ، سيتم الانتقال إلى هنا تلقائياً.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل: ${e.message}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } on ApiException catch(e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('فشل: ${e.message}'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('طلبات إنشاء الشركات'),
+        title: const Text('طلبات الشركات المعلقة'),
       ),
       body: Consumer<AdminCompanyRequestsProvider>(
         builder: (context, provider, child) {
-          if (provider.isLoading) {
+          if (provider.isLoading && provider.companyRequests.isEmpty) {
             return const Center(child: CircularProgressIndicator());
+          }
+          if (provider.error != null) {
+            return Center(child: Text('خطأ: ${provider.error}'));
           }
           if (provider.companyRequests.isEmpty) {
             return const Center(child: Text('لا توجد طلبات معلقة حالياً.'));
@@ -40,6 +79,7 @@ class _AdminCompanyRequestsScreenState extends State<AdminCompanyRequestsScreen>
           return RefreshIndicator(
             onRefresh: () => provider.fetchCompanyRequests(context),
             child: ListView.builder(
+              padding: const EdgeInsets.all(8.0),
               itemCount: provider.companyRequests.length,
               itemBuilder: (context, index) {
                 final company = provider.companyRequests[index];
@@ -53,41 +93,76 @@ class _AdminCompanyRequestsScreenState extends State<AdminCompanyRequestsScreen>
   }
 
   Widget _buildRequestCard(Company company, AdminCompanyRequestsProvider provider) {
+    final bool isProcessing = provider.isProcessing(company.companyId!);
+
     return Card(
-      margin: const EdgeInsets.all(8.0),
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(company.name ?? 'اسم غير معروف', style: Theme.of(context).textTheme.titleLarge),
+            Text(company.name ?? 'اسم غير معروف', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('مقدم الطلب: ${company.user?.firstName ?? ''} ${company.user?.lastName ?? ''}'),
-            Text('البريد الإلكتروني: ${company.email ?? ''}'),
-            const Divider(),
-            Text(company.description ?? 'لا يوجد وصف.'),
-            const SizedBox(height: 16),
+            _buildInfoRow(Icons.person_outline, 'مقدم الطلب:', '${company.user?.firstName ?? ''} ${company.user?.lastName ?? ''}'),
+            _buildInfoRow(Icons.email_outlined, 'البريد:', company.email ?? 'لا يوجد'),
+            _buildInfoRow(Icons.phone_outlined, 'الهاتف:', company.phone ?? 'لا يوجد'),
+
+            const Divider(height: 24),
+
+            Text('الوصف:', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Text(company.description ?? 'لا يوجد وصف.', style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade700)),
+
+            const SizedBox(height: 24),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(
-                  onPressed: () async {
-                    await provider.rejectRequest(context, company.companyId!);
-                  },
-                  child: const Text('رفض', style: TextStyle(color: Colors.red)),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () async {
-                    await provider.approveRequest(context, company.companyId!);
-                  },
-                  child: const Text('موافقة'),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                ),
+                if (isProcessing)
+                  const SizedBox(width: 24, height: 24, child: CircularProgressIndicator())
+                else ...[
+                  TextButton(
+                    onPressed: () => _handleRequest(
+                        context,
+                            () => provider.rejectRequest(context, company.companyId!),
+                        'تم رفض الطلب بنجاح'
+                    ),
+                    child: const Text('رفض', style: TextStyle(color: Colors.red)),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => _handleRequest(
+                        context,
+                        // --- هنا تم الإصلاح ---
+                            () => provider.approveRequest(context, company.companyId!),
+                        'تمت الموافقة على الطلب بنجاح'
+                    ),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    child: const Text('موافقة'),
+                  ),
+                ]
               ],
             )
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey.shade600),
+          const SizedBox(width: 8),
+          Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
+          const SizedBox(width: 4),
+          Expanded(child: Text(value, style: TextStyle(color: Colors.grey.shade800))),
+        ],
       ),
     );
   }

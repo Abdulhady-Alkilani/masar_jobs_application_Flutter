@@ -1,14 +1,17 @@
 // lib/screens/consultant/articles/create_edit_article_screen.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../../models/article.dart';
 import '../../../providers/consultant_article_provider.dart';
 import '../../../services/api_service.dart';
 
 class CreateEditArticleScreen extends StatefulWidget {
   final Article? article;
-
   const CreateEditArticleScreen({super.key, this.article});
 
   @override
@@ -21,7 +24,9 @@ class _CreateEditArticleScreenState extends State<CreateEditArticleScreen> {
   late final Map<String, dynamic> _articleData;
   bool _isLoading = false;
 
-  // Controllers
+  File? _selectedImage;
+  PlatformFile? _selectedPdf;
+
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
@@ -32,7 +37,6 @@ class _CreateEditArticleScreenState extends State<CreateEditArticleScreen> {
       'Title': widget.article?.title ?? '',
       'Description': widget.article?.description ?? '',
     };
-
     _titleController.text = _articleData['Title'];
     _descriptionController.text = _articleData['Description'];
   }
@@ -44,10 +48,32 @@ class _CreateEditArticleScreenState extends State<CreateEditArticleScreen> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() => _selectedImage = File(pickedFile.path));
+    }
+  }
+
+  Future<void> _pickPdf() async {
+    final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+    if (result != null) {
+      setState(() => _selectedPdf = result.files.first);
+    }
+  }
+
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       setState(() => _isLoading = true);
+
+      final String currentDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      _articleData['Date'] = currentDate;
+
+      // TODO: Add logic to upload files and get URLs
+      // _articleData['Article Photo'] = 'url_of_uploaded_image';
+      // _articleData['PdfLink'] = 'url_of_uploaded_pdf';
 
       final provider = Provider.of<ConsultantArticleProvider>(context, listen: false);
       try {
@@ -74,10 +100,9 @@ class _CreateEditArticleScreenState extends State<CreateEditArticleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? 'تعديل المقال' : 'مقال جديد'),
-      ),
+      appBar: AppBar(title: Text(_isEditing ? 'تعديل المقال' : 'مقال جديد'), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Form(
@@ -85,26 +110,8 @@ class _CreateEditArticleScreenState extends State<CreateEditArticleScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // TODO: إضافة حقل لاختيار صورة المقال
-              Container(
-                height: 180,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.add_a_photo_outlined, size: 40, color: Colors.grey.shade500),
-                      const SizedBox(height: 8),
-                      Text('إضافة صورة للمقال', style: TextStyle(color: Colors.grey.shade600)),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
+              _buildImagePicker(theme),
+              const SizedBox(height: 32),
               _buildTextFormField(
                 controller: _titleController,
                 label: 'عنوان المقال',
@@ -117,25 +124,78 @@ class _CreateEditArticleScreenState extends State<CreateEditArticleScreen> {
                 controller: _descriptionController,
                 label: 'محتوى المقال',
                 icon: Icons.article_outlined,
-                maxLines: 10,
+                maxLines: 8,
                 validator: (v) => v!.isEmpty ? 'المحتوى مطلوب' : null,
                 onSaved: (v) => _articleData['Description'] = v!,
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
+              _buildPdfPicker(theme),
+              const SizedBox(height: 40),
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton.icon(
                 onPressed: _submitForm,
-                icon: Icon(_isEditing ? Icons.save_alt_rounded : Icons.add_rounded),
+                icon: Icon(_isEditing ? Icons.save_alt_rounded : Icons.publish_rounded),
                 label: Text(_isEditing ? 'حفظ التعديلات' : 'نشر المقال'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
+                style: theme.elevatedButtonTheme.style,
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  // --- دوال مساعدة معبأة بالكامل ---
+
+  Widget _buildImagePicker(ThemeData theme) {
+    return GestureDetector(
+      onTap: _pickImage,
+      child: Container(
+        height: 200,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: theme.primaryColor.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
+        ),
+        child: _selectedImage != null
+            ? ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: Image.file(_selectedImage!, fit: BoxFit.cover),
+        )
+            : Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_photo_alternate_outlined, size: 50, color: Colors.grey.shade500),
+            const SizedBox(height: 12),
+            Text('اختر صورة رئيسية للمقال', style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPdfPicker(ThemeData theme) {
+    return ListTile(
+      onTap: _pickPdf,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade300),
+      ),
+      tileColor: theme.primaryColor.withOpacity(0.05),
+      leading: Icon(Icons.picture_as_pdf_outlined, color: theme.colorScheme.error, size: 30),
+      title: Text(
+        _selectedPdf == null ? 'إرفاق ملف PDF (اختياري)' : 'الملف المرفق:',
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      subtitle: _selectedPdf != null ? Text(_selectedPdf!.name, overflow: TextOverflow.ellipsis) : null,
+      trailing: _selectedPdf != null
+          ? IconButton(
+        icon: const Icon(Icons.close_rounded, color: Colors.grey),
+        onPressed: () => setState(() => _selectedPdf = null),
+      )
+          : const Icon(Icons.attach_file_rounded, color: Colors.grey),
     );
   }
 
@@ -155,7 +215,7 @@ class _CreateEditArticleScreenState extends State<CreateEditArticleScreen> {
         prefixIcon: Icon(icon, color: Theme.of(context).primaryColor),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
-        fillColor: Theme.of(context).primaryColor.withOpacity(0.05),
+        fillColor: Theme.of(context).primaryColor.withOpacity(0.02),
       ),
       validator: validator,
       onSaved: onSaved,

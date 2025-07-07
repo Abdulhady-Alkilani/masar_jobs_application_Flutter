@@ -1,227 +1,129 @@
-// lib/screens/user_profile_screen.dart
+// lib/screens/profile/user_profile_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
-import '../services/api_service.dart';
-import '../models/user.dart';
-import '../models/skill.dart';
+import '../../providers/auth_provider.dart';
+import '../../models/user.dart';
+import '../../models/skill.dart'; // استيراد موديل المهارة
+import 'edit_profile_screen.dart';
 
-// -- ويدجت Neumorphism الداكنة --
-class DarkNeumorphicContainer extends StatelessWidget {
-  final Widget child;
-  final bool isConcave;
-  final EdgeInsets padding;
-  final BoxShape shape;
-  final VoidCallback? onTap;
-
-  const DarkNeumorphicContainer({
-    Key? key, required this.child, this.isConcave = false,
-    this.padding = const EdgeInsets.all(12), this.shape = BoxShape.rectangle, this.onTap,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    const backgroundColor = Color(0xFF2E3239);
-    final shadowColor = const Color(0xFF23262B);
-    final lightColor = const Color(0xFF393D47);
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: padding,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: shape == BoxShape.rectangle ? BorderRadius.circular(20) : null,
-          shape: shape,
-          gradient: isConcave ? LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [shadowColor, lightColor]) : null,
-          boxShadow: isConcave ? null : [
-            BoxShadow(color: shadowColor, offset: const Offset(5, 5), blurRadius: 10),
-            BoxShadow(color: lightColor, offset: const Offset(-5, -5), blurRadius: 10),
-          ],
-        ),
-        child: child,
-      ),
-    );
-  }
-}
-
-class UserProfileScreen extends StatefulWidget {
+class UserProfileScreen extends StatelessWidget {
   const UserProfileScreen({super.key});
-  @override
-  State<UserProfileScreen> createState() => _UserProfileScreenState();
-}
-
-class _UserProfileScreenState extends State<UserProfileScreen> {
-  bool _isEditMode = false;
-  bool _isSaving = false;
-
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _personalBioController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeControllers();
-  }
-
-  void _initializeControllers() {
-    final user = context.read<AuthProvider>().user;
-    if (user != null) {
-      _firstNameController.text = user.firstName ?? '';
-      _lastNameController.text = user.lastName ?? '';
-      _phoneController.text = user.phone ?? '';
-      _personalBioController.text = user.profile?.personalDescription ?? '';
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _initializeControllers();
-  }
-
-  @override
-  void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _phoneController.dispose();
-    _personalBioController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _saveProfile() async {
-    // ... منطق الحفظ
-  }
 
   @override
   Widget build(BuildContext context) {
-    const backgroundColor = Color(0xFF2E3239);
-    const primaryColor = Color(0xFF00BFFF);
-    final user = context.watch<AuthProvider>().user;
+    // استخدم watch للاستماع للتغيرات وإعادة بناء الواجهة
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user;
+    final theme = Theme.of(context);
 
-    if (user == null) {
-      return const Scaffold(backgroundColor: backgroundColor, body: Center(child: CircularProgressIndicator()));
-    }
+    // تعريف لون الخلفية ليتناسب مع تصميم Neumorphism
+    const backgroundColor = Color(0xFFE3F2FD); // سماوي فاتح جداً (أفتح من السابق)
 
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: backgroundColor,
+        title: const Text('الملف الشخصي'),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: const BackButton(color: Colors.white70),
-        title: const Text('الملف الشخصي', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        centerTitle: true,
+        foregroundColor: theme.primaryColor,
         actions: [
-          if (_isSaving)
-            const Padding(padding: EdgeInsets.all(16.0), child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3)))
-          else
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: DarkNeumorphicContainer(
-                onTap: () {
-                  if (_isEditMode) _saveProfile();
-                  else setState(() => _isEditMode = true);
-                },
-                shape: BoxShape.circle,
-                padding: const EdgeInsets.all(12),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
-                  child: Icon(
-                    _isEditMode ? Icons.save_alt_rounded : Icons.edit_rounded,
-                    key: ValueKey<bool>(_isEditMode),
-                    color: primaryColor,
-                  ),
-                ),
-              ),
+          // زر التعديل الوحيد في الشريط العلوي
+          if (user != null)
+            IconButton(
+              icon: Icon(Icons.edit_outlined, color: theme.primaryColor),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => EditProfileScreen(userToEdit: user)),
+                );
+              },
+              tooltip: 'تعديل الملف الشخصي',
             ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            _buildHeader(user, primaryColor),
-            const SizedBox(height: 32),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 500),
-              transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
-              child: _isEditMode ? _buildEditView(key: const ValueKey('edit')) : _buildDisplayView(user: user, key: const ValueKey('display')),
-            ),
-          ],
+      body: authProvider.isLoading && user == null
+          ? const Center(child: CircularProgressIndicator())
+          : user == null
+          ? const Center(child: Text('تعذر تحميل بيانات المستخدم.'))
+          : RefreshIndicator(
+        onRefresh: () => Provider.of<AuthProvider>(context, listen: false).checkAuthStatus(),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildUserHeader(context, user, theme),
+              const SizedBox(height: 24),
+              _buildInfoSection(
+                context,
+                title: 'المعلومات الأساسية',
+                icon: Icons.badge_outlined,
+                children: [
+                  _buildInfoRow('البريد الإلكتروني', user.email ?? '...'),
+                  _buildInfoRow('رقم الهاتف', user.phone ?? 'لم يضف'),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _buildInfoSection(
+                context,
+                title: 'المعلومات الأكاديمية',
+                icon: Icons.school_outlined,
+                children: [
+                  _buildInfoRow('الجامعة', user.profile?.university ?? 'لم تضف'),
+                  _buildInfoRow('المعدل التراكمي', user.profile?.gpa ?? 'لم يضف'),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _buildInfoSection(
+                context,
+                title: 'النبذة التعريفية',
+                icon: Icons.description_outlined,
+                children: [
+                  Text(
+                    user.profile?.personalDescription != null && user.profile!.personalDescription!.isNotEmpty
+                        ? user.profile!.personalDescription!
+                        : 'لا توجد نبذة تعريفية.',
+                    style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey[700], height: 1.5),
+                  )
+                ],
+              ),
+              const SizedBox(height: 24),
+              _buildSkillsSection(context, user.skills ?? []),
+            ].animate(interval: 100.ms).fadeIn(duration: 600.ms).slideY(begin: 0.2),
+          ),
         ),
       ),
     );
   }
 
-  // --- واجهات العرض والتعديل ---
-  Widget _buildDisplayView({required User user, Key? key}) {
-    return Column(
-      key: key,
-      children: [
-        _buildInfoSection(title: 'المعلومات الأساسية', children: [
-          _buildInfoRow(Icons.email_outlined, user.email ?? '...'),
-          const Divider(height: 24, color: Colors.white10),
-          _buildInfoRow(Icons.phone_outlined, user.phone ?? '...'),
-        ]),
-        const SizedBox(height: 24),
-        _buildInfoSection(title: 'النبذة التعريفية', children: [
-          Text(user.profile?.personalDescription ?? 'لم تتم إضافة نبذة.', style: const TextStyle(color: Colors.white70, height: 1.5)),
-        ]),
-        const SizedBox(height: 24),
-        _buildInfoSection(title: 'المهارات', children: [
-          _buildSkillsView(user.skills ?? []),
-        ]),
-      ],
-    );
-  }
+  // --- دوال مساعدة لجعل الكود أنظف ---
 
-  Widget _buildEditView({Key? key}) {
-    return Column(
-      key: key,
-      children: [
-        _buildInfoSection(title: 'تعديل المعلومات', children: [
-          _buildTextFormField(_firstNameController, 'الاسم الأول'),
-          const SizedBox(height: 16),
-          _buildTextFormField(_lastNameController, 'الاسم الأخير'),
-          const SizedBox(height: 16),
-          _buildTextFormField(_phoneController, 'رقم الهاتف', keyboardType: TextInputType.phone),
-        ]),
-        const SizedBox(height: 24),
-        _buildInfoSection(title: 'تعديل النبذة', children: [
-          _buildTextFormField(_personalBioController, 'نبذة شخصية', maxLines: 5),
-        ]),
-      ],
-    );
-  }
-
-  // --- ويدجت مساعدة ---
-  Widget _buildHeader(User user, Color primaryColor) {
-    return DarkNeumorphicContainer(
-      isConcave: true,
+  Widget _buildUserHeader(BuildContext context, User user, ThemeData theme) {
+    return NeumorphicCard(
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
-          DarkNeumorphicContainer(
-            shape: BoxShape.circle,
-            child: CircleAvatar(
-              radius: 35,
-              backgroundColor: Colors.transparent,
-              child: Text(user.firstName?.substring(0, 1) ?? 'U', style: TextStyle(color: primaryColor, fontSize: 32, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          const SizedBox(width: 20),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${user.firstName} ${user.lastName}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                Text(
+                  '${user.firstName} ${user.lastName}',
+                  style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 4),
-                Text(user.type ?? 'غير محدد', style: const TextStyle(color: Colors.white70)),
+                Text(user.type ?? 'عضو', style: theme.textTheme.titleMedium?.copyWith(color: Colors.grey.shade600)),
               ],
+            ),
+          ),
+          NeumorphicButton(
+            isCircle: true,
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              user.firstName?.substring(0, 1).toUpperCase() ?? 'U',
+              style: TextStyle(fontSize: 28, color: theme.colorScheme.secondary, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -229,64 +131,100 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 
-  Widget _buildInfoSection({required String title, required List<Widget> children}) {
-    return DarkNeumorphicContainer(
-      padding: const EdgeInsets.all(20),
+  Widget _buildInfoSection(BuildContext context, {required String title, required IconData icon, required List<Widget> children}) {
+    final theme = Theme.of(context);
+    return NeumorphicCard(
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 16),
+          Row(
+            children: [
+              Icon(icon, color: theme.primaryColor),
+              const SizedBox(width: 8),
+              Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const Divider(height: 24, thickness: 0.5),
           ...children,
         ],
       ),
     );
   }
 
-  Widget _buildSkillsView(List<Skill> skills) {
-    if (skills.isEmpty) return const Text('لم تتم إضافة مهارات بعد.', style: TextStyle(color: Colors.white54));
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: skills.map((skill) => DarkNeumorphicContainer(
-        onTap: () {},
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Text(skill.name ?? '', style: TextStyle(color: Theme.of(context).colorScheme.secondary, fontWeight: FontWeight.w600)),
-      )).toList(),
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$label:', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
+          const SizedBox(width: 8),
+          Expanded(child: Text(value, style: TextStyle(color: Colors.grey.shade800, fontSize: 16))),
+        ],
+      ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Row(
+  Widget _buildSkillsSection(BuildContext context, List<Skill> skills) {
+    return _buildInfoSection(
+      context,
+      title: 'المهارات',
+      icon: Icons.star_outline,
       children: [
-        Icon(icon, color: Colors.white54),
-        const SizedBox(width: 16),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 16, color: Colors.white70))),
+        if (skills.isNotEmpty)
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: skills.map((skill) => Chip(
+              label: Text(skill.name ?? ''),
+              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+              side: BorderSide.none,
+              labelStyle: TextStyle(color: Theme.of(context).primaryColor),
+            )).toList(),
+          )
+        else
+          const Text('لم تتم إضافة مهارات بعد.', style: TextStyle(color: Colors.grey)),
       ],
     );
   }
+}
 
-  // --- هنا تم تصحيح تعريف الدالة ---
-  Widget _buildTextFormField(
-      TextEditingController controller,
-      String label,
-      { // استخدام الأقواس المعقوفة للبارامترات المسماة
-        int maxLines = 1,
-        TextInputType? keyboardType,
-      }
-      ) {
-    return TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Colors.white54),
-        filled: true,
-        fillColor: const Color(0xFF23262B),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+// --- ويدجت Neumorphic (يمكن نقلها إلى ملف منفصل في widgets/) ---
+class NeumorphicCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsets padding;
+  const NeumorphicCard({Key? key, required this.child, this.padding = const EdgeInsets.all(20)}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE3F2FD),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.08), offset: const Offset(5, 5), blurRadius: 10),
+          const BoxShadow(color: Colors.white, offset: Offset(-5, -5), blurRadius: 10),
+        ],
       ),
+      child: child,
+    );
+  }
+}
+
+class NeumorphicButton extends StatelessWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  final bool isCircle;
+  final EdgeInsets padding;
+  const NeumorphicButton({Key? key, required this.child, this.onTap, this.isCircle = false, this.padding = const EdgeInsets.all(12)}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: NeumorphicCard(padding: padding, child: child),
     );
   }
 }

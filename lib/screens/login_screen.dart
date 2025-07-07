@@ -2,193 +2,169 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
-
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
 
   void _login() async {
-    // إخفاء لوحة المفاتيح
     FocusScope.of(context).unfocus();
+    if (!_formKey.currentState!.validate()) return;
 
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-      try {
-        await authProvider.login(
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-        );
-        // لا نحتاج لـ SnackBar هنا لأن الـ Wrapper سيعيد التوجيه تلقائياً
-        // إذا أردت إظهار رسالة ترحيب، يمكن عرضها في الشاشة الرئيسية بعد تسجيل الدخول
-      } on ApiException catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('حدث خطأ غير متوقع. حاول مرة أخرى.'),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    try {
+      await authProvider.login(_emailController.text.trim(), _passwordController.text.trim());
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(e.message, textAlign: TextAlign.right),
+        backgroundColor: Colors.red.shade400,
+      ));
     }
   }
 
   @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
     final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
+    final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  // 1. الشعار والعنوان
-                  Icon(
-                    Icons.workspaces_outline,
-                    size: 80,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '! مرحباً بعودتك',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'سجل الدخول للمتابعة إلى مسار',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleMedium?.copyWith(color: Colors.grey.shade600),
-                  ),
-                  const SizedBox(height: 40),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // --- 1. الخلفية الهندسية المتحركة ---
+          Container(color: const Color(0xFFF0F4F8)),
+          Positioned(top: -150, right: -150, child: _buildShape(theme.primaryColor.withOpacity(0.2), 300)),
+          Positioned(bottom: -180, left: -100, child: _buildShape(theme.colorScheme.secondary.withOpacity(0.2), 400)),
 
-                  // 2. حقل البريد الإلكتروني
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: 'البريد الإلكتروني',
-                      prefixIcon: Icon(Icons.email_outlined, color: theme.colorScheme.primary),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          // --- 2. المحتوى ---
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'أهلاً بك',
+                      style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.bold, color: theme.primaryColor),
                     ),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'الرجاء إدخال البريد الإلكتروني';
-                      }
-                      if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
-                        return 'صيغة البريد الإلكتروني غير صحيحة';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16.0),
+                    const SizedBox(height: 8),
+                    const Text('ابدأ رحلتك المهنية مع مسار', style: TextStyle(fontSize: 18, color: Colors.black54)),
+                    const SizedBox(height: 50),
 
-                  // 3. حقل كلمة المرور
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(
-                      labelText: 'كلمة المرور',
-                      prefixIcon: Icon(Icons.lock_outline, color: theme.colorScheme.primary),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isPasswordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
-                      ),
-                    ),
-                    obscureText: !_isPasswordVisible,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'الرجاء إدخال كلمة المرور';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24.0),
-
-                  // 4. زر تسجيل الدخول
-                  authProvider.isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                    onPressed: _login,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('تسجيل الدخول', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                  const SizedBox(height: 24.0),
-
-                  // 5. رابط إنشاء حساب جديد
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('لا تمتلك حساب؟', style: TextStyle(color: isDarkMode ? Colors.white70 : Colors.black87)),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            PageRouteBuilder(
-                              pageBuilder: (context, animation, secondaryAnimation) => const RegisterScreen(),
-                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                return FadeTransition(opacity: animation, child: child);
-                              },
+                    // --- 3. النموذج الشفاف ---
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildTextField(
+                            controller: _emailController,
+                            label: 'البريد الإلكتروني',
+                            icon: Icons.alternate_email,
+                          ),
+                          const SizedBox(height: 20),
+                          _buildTextField(
+                            controller: _passwordController,
+                            label: 'كلمة المرور',
+                            icon: Icons.lock_outline,
+                            obscureText: !_isPasswordVisible,
+                            suffixIcon: IconButton(
+                              icon: Icon(_isPasswordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.grey),
+                              onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                             ),
-                          );
-                        },
-                        child: Text('سجل الآن', style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+                          ),
+                          const SizedBox(height: 40),
+                          authProvider.isLoading
+                              ? const Center(child: CircularProgressIndicator())
+                              : _buildLoginButton(context),
+                        ],
                       ),
-                    ],
-                  ),
-                ],
+                    ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.2),
+
+                    const SizedBox(height: 24),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('ليس لديك حساب ؟'),
+                        TextButton(
+                          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
+                          child: Text('سجل الان', style: TextStyle(fontWeight: FontWeight.bold, color: theme.primaryColor)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
+    );
+  }
+
+  // --- دوال مساعدة محدثة ---
+
+  Widget _buildShape(Color color, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    ).animate(onPlay: (c) => c.repeat(reverse: true))
+        .scaleXY(duration: 25.seconds, begin: 0.7, end: 1.3)
+        .then().rotate(duration: 40.seconds, begin: -0.1, end: 0.1);
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool obscureText = false,
+    Widget? suffixIcon,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: Theme.of(context).primaryColor),
+        // تصميم شفاف
+        filled: true,
+        fillColor: Colors.black.withOpacity(0.04), // لون خفيف جداً
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+      ),
+      validator: (v) => (v == null || v.trim().isEmpty) ? 'الحقل مطلوب' : null,
+    );
+  }
+
+  Widget _buildLoginButton(BuildContext context) {
+    return OutlinedButton( // <-- استخدام OutlinedButton
+      onPressed: _login,
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 18),
+        side: BorderSide(color: Theme.of(context).primaryColor, width: 2), // إطار بلون الثيم
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      ),
+
+      child: Text(
+        'تسجيل الدخول',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
+      ),
+
     );
   }
 }

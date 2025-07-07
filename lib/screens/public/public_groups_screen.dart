@@ -18,38 +18,26 @@ class _PublicGroupsScreenState extends State<PublicGroupsScreen> {
   @override
   void initState() {
     super.initState();
+    // استدعاء جلب البيانات عند بناء الويدجت لأول مرة
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = Provider.of<PublicGroupProvider>(context, listen: false);
-      // جلب البيانات فقط إذا كانت القائمة فارغة
-      if (provider.groups.isEmpty) {
-        provider.fetchGroups();
-      }
+      Provider.of<PublicGroupProvider>(context, listen: false).fetchGroups();
     });
-  }
-
-  Future<void> _launchUrl(String urlString) async {
-    final Uri url = Uri.parse(urlString);
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('لا يمكن فتح الرابط: $urlString')),
-        );
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('مجموعات مسار')),
+      appBar: AppBar(
+        title: const Text('مجموعات مسار'),
+      ),
       body: Consumer<PublicGroupProvider>(
         builder: (context, provider, child) {
-          // --- الحالة 1: التحميل ---
+          // الحالة 1: التحميل
           if (provider.isLoading && provider.groups.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // --- الحالة 2: وجود خطأ ---
+          // الحالة 2: وجود خطأ
           if (provider.error != null) {
             return EmptyStateWidget(
               icon: Icons.error_outline_rounded,
@@ -59,16 +47,16 @@ class _PublicGroupsScreenState extends State<PublicGroupsScreen> {
             );
           }
 
-          // --- الحالة 3: لا توجد بيانات (فارغة) ---
+          // الحالة 3: لا توجد بيانات
           if (provider.groups.isEmpty) {
             return const EmptyStateWidget(
               icon: Icons.groups_2_outlined,
               title: 'لا توجد مجموعات حالياً',
-              message: 'سيتم إضافة روابط المجموعات قريباً لتكون على تواصل دائم معنا ومع المجتمع.',
+              message: 'سيتم إضافة روابط المجموعات قريباً لتكون على تواصل دائم.',
             );
           }
 
-          // --- الحالة 4: النجاح ووجود بيانات (هذا هو الجزء الذي تم إصلاحه) ---
+          // الحالة 4: النجاح وعرض البيانات
           return RefreshIndicator(
             onRefresh: () => provider.fetchGroups(),
             child: ListView.builder(
@@ -76,9 +64,9 @@ class _PublicGroupsScreenState extends State<PublicGroupsScreen> {
               itemCount: provider.groups.length,
               itemBuilder: (context, index) {
                 final group = provider.groups[index];
-                return GroupCard(group: group)
+                return GroupCard(group: group, index: index + 1)
                     .animate(delay: (100 * index).ms)
-                    .fadeIn()
+                    .fadeIn(duration: 500.ms)
                     .slideY(begin: 0.5, curve: Curves.easeOut);
               },
             ),
@@ -89,15 +77,21 @@ class _PublicGroupsScreenState extends State<PublicGroupsScreen> {
   }
 }
 
-// ويدجت بطاقة المجموعة
+// --- ويدجت البطاقة المخصصة للمجموعات ---
 class GroupCard extends StatelessWidget {
   final Group group;
-  const GroupCard({Key? key, required this.group}) : super(key: key);
+  final int index; // لاستخدامه في العنوان
 
+  const GroupCard({Key? key, required this.group, required this.index}) : super(key: key);
+
+  // دالة لفتح الروابط الخارجية
   Future<void> _launchUrl(String urlString, BuildContext context) async {
-    if (!await launchUrl(Uri.parse(urlString), mode: LaunchMode.externalApplication)) {
+    final Uri url = Uri.parse(urlString);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('لا يمكن فتح الرابط')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('لا يمكن فتح الرابط: $urlString')),
+        );
       }
     }
   }
@@ -115,17 +109,21 @@ class GroupCard extends StatelessWidget {
             _launchUrl(group.telegramHyperLink!, context);
           }
         },
-        leading: CircleAvatar(
-          backgroundColor: const Color(0xFF2AABEE), // لون تيليجرام
-          child: const Icon(Icons.telegram, color: Colors.white),
+        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        leading: const CircleAvatar(
+          radius: 28,
+          backgroundColor: Color(0xFF2AABEE), // لون تيليجرام
+          child: Icon(Icons.telegram, color: Colors.white, size: 32),
         ),
         title: Text(
-          'مجموعة تيليجرام ${DateTime.now().millisecond + UniqueKey().hashCode}', // عنوان فريد بسيط
+          'مجموعة مسار على تيليجرام #$index',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
           group.telegramHyperLink ?? 'اضغط للانضمام',
+          style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
           overflow: TextOverflow.ellipsis,
+          textDirection: TextDirection.ltr, // لضمان عرض الرابط بشكل صحيح
         ),
         trailing: Icon(Icons.open_in_new, color: theme.primaryColor),
       ),

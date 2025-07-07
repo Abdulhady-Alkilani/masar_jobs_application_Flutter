@@ -1,223 +1,227 @@
-// lib/screens/public_views/public_training_course_details_screen.dart
+// lib/screens/public_views/public_course_details_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart'; // لتنسيق التاريخ
-// ستحتاج مكتبة url_launcher لفتح الرابط إذا كان موجوداً
-import 'package:url_launcher/url_launcher.dart';
-import 'package:url_launcher/url_launcher_string.dart'; // لاستخدام launchUrlString
+import 'package:intl/intl.dart';
 
 import '../../models/training_course.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/my_enrollments_provider.dart';
 import '../../providers/public_training_course_provider.dart';
-import '../../services/api_service.dart'; // لاستخدام ApiException
-// TODO: قد تحتاج استيراد AuthProvider و MyEnrollmentsProvider إذا أضفت زر التسجيل الداخلي
- import '../../providers/auth_provider.dart';
- import '../../providers/my_enrollments_provider.dart';
+import '../../services/api_service.dart';
+import '../../providers/auth_provider.dart';
+import '../widgets/empty_state_widget.dart';
 
-
-class PublicTrainingCourseDetailsScreen extends StatefulWidget {
+class PublicCourseDetailsScreen extends StatefulWidget {
   final int courseId;
-
-  const PublicTrainingCourseDetailsScreen({super.key, required this.courseId});
+  const PublicCourseDetailsScreen({super.key, required this.courseId});
 
   @override
-  State<PublicTrainingCourseDetailsScreen> createState() => _PublicTrainingCourseDetailsScreenState();
+  State<PublicCourseDetailsScreen> createState() => _PublicCourseDetailsScreenState();
 }
 
-class _PublicTrainingCourseDetailsScreenState extends State<PublicTrainingCourseDetailsScreen> {
-  // لا حاجة لتهيئة Provider هنا، سيتم استخدامه في FutureBuilder
+class _PublicCourseDetailsScreenState extends State<PublicCourseDetailsScreen> {
+  late Future<TrainingCourse?> _courseFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _courseFuture = Provider.of<PublicTrainingCourseProvider>(context, listen: false).fetchTrainingCourse(widget.courseId);
+  }
+
+  // دالة التسجيل في الدورة
+  void _enrollInCourse(TrainingCourse course) async {
+    final myEnrollmentsProvider = Provider.of<MyEnrollmentsProvider>(context, listen: false);
+    try {
+      await myEnrollmentsProvider.enrollInCourse(context, course.courseId!);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم تسجيلك في الدورة بنجاح!'), backgroundColor: Colors.green),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('فشل التسجيل: ${e.message}'), backgroundColor: Theme.of(context).colorScheme.error),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // يمكن الوصول إلى Provider للاستدعاء فقط (listen: false) إذا لزم الأمر
-    //final courseProvider = Provider.of<PublicTrainingCourseProvider>(context, listen: false);
+    final theme = Theme.of(context);
+    final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('تفاصيل الدورة'), // يمكن تغيير العنوان لاحقاً بعد جلب البيانات
-      ),
-      // استخدام FutureBuilder لجلب بيانات الدورة عند بناء الشاشة
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: FutureBuilder<TrainingCourse?>(
-        // استخدام تابع جلب الدورة الفردي من Provider
-        // نستخدم listen: false لأننا داخل FutureBuilder ونريد فقط النتيجة الأولية المستقبلية
-        future: Provider.of<PublicTrainingCourseProvider>(context, listen: false).fetchTrainingCourse(widget.courseId),
+        future: _courseFuture,
         builder: (context, snapshot) {
-          // حالات التحميل والخطأ والبيانات
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            // عرض خطأ من الـ Provider إذا كان متاحاً، أو خطأ snapshot
-            // هنا قد تحتاج listen: true لقراءة error من provider، أو الأفضل جلب الخطأ من FutureBuilder نفسه
-            // أو ببساطة عرض خطأ snapshot.error
-            final provider = Provider.of<PublicTrainingCourseProvider>(context, listen: false); // استخدم listen: false هنا لتجنب مشاكل محتملة مع FutureBuilder
-            final errorMessage = provider.error ?? snapshot.error?.toString() ?? 'حدث خطأ غير معروف';
-            return Center(child: Text('حدث خطأ: $errorMessage'));
-          } else if (!snapshot.hasData || snapshot.data == null) {
-            return const Center(child: Text('لم يتم العثور على الدورة.'));
-          } else {
-            // عرض تفاصيل الدورة بعد جلبها بنجاح
-            final course = snapshot.data!;
-
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // اسم الدورة
-                  Text(
-                    course.courseName ?? 'عنوان الدورة غير معروف',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // المدرب والموقع (إذا كان متاحاً)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.person_outline, size: 20, color: Colors.grey.shade700),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'المدرب: ${course.trainersName ?? 'غير محدد'}',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey.shade700),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.location_on_outlined, size: 20, color: Colors.grey.shade700),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'الموقع: ${course.site ?? 'غير محدد'}',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey.shade700),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  if (course.trainersSite != null && course.trainersSite!.isNotEmpty)
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.business_outlined, size: 20, color: Colors.grey.shade700),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'منصة/جهة التدريب: ${course.trainersSite}',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey.shade700),
-                          ),
-                        ),
-                      ],
-                    ),
-                  const SizedBox(height: 16),
-
-                  // التواريخ والمستوى والشهادة
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.calendar_today_outlined, size: 20, color: Colors.grey.shade700),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'التواريخ: ${course.startDate != null ? DateFormat('dd/MM/yyyy').format(course.startDate!) : 'غير محدد'} - ${course.endDate != null ? DateFormat('dd/MM/yyyy').format(course.endDate!) : 'غير محدد'}',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.bar_chart_outlined, size: 20, color: Colors.grey.shade700),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'المستوى: ${course.stage ?? 'غير محدد'}',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.card_membership_outlined, size: 20, color: Colors.grey.shade700),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'شهادة: ${course.certificate ?? 'غير محدد'}',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // وصف الدورة
-                  Text(
-                    'الوصف:',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    course.courseDescription ?? 'لا يوجد وصف مفصل لهذه الدورة.',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // رابط التسجيل (إذا كان متاحاً)
-                  if (course.enrollHyperLink != null && course.enrollHyperLink!.isNotEmpty)
-                    Center(
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.open_in_new),
-                        label: const Text('التسجيل في الدورة'),
-                        onPressed: () async {
-                          // فتح الرابط في متصفح خارجي
-                          final url = course.enrollHyperLink!;
-                          try {
-                            if (await canLaunchUrlString(url)) {
-                              await launchUrlString(url);
-                            } else {
-                              // التعامل مع الخطأ إذا تعذر فتح الرابط
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('لا يمكن فتح الرابط: $url')),
-                              );
-                            }
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('حدث خطأ أثناء فتح الرابط: $e')),
-                            );
-                          }
-                        },
-                      ),
-                    ),
-
-                  // TODO: إضافة زر للتسجيل في الدورة من داخل التطبيق إذا كان مسموحاً (يحتاج مستخدم مصادق عليه وتابع في MyEnrollmentsProvider)
-                  if (Provider.of<AuthProvider>(context).isAuthenticated) // تحقق من المصادقة
-                    ElevatedButton(
-                      onPressed: () {
-                         // استدعاء تابع التسجيل في الدورة من MyEnrollmentsProvider
-                          Provider.of<MyEnrollmentsProvider>(context, listen: false).enrollInCourse(context, course.courseId!);
-                      },
-                      child: const Text('التسجيل'),
-                    ),
-
-
-                  const SizedBox(height: 16), // مساحة إضافية في النهاية
-
-                ],
-              ),
+          }
+          if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+            return EmptyStateWidget(
+              icon: Icons.error_outline_rounded,
+              title: 'خطأ',
+              message: 'تعذر تحميل تفاصيل الدورة. يرجى المحاولة مرة أخرى.',
+              onRefresh: () {
+                setState(() {
+                  _courseFuture = Provider.of<PublicTrainingCourseProvider>(context, listen: false).fetchTrainingCourse(widget.courseId);
+                });
+              },
             );
           }
+
+          final course = snapshot.data!;
+
+          return CustomScrollView(
+            slivers: [
+              // 1. الشريط العلوي (Header)
+              SliverAppBar(
+                expandedHeight: 250.0,
+                pinned: true,
+                stretch: true,
+                backgroundColor: theme.primaryColor,
+                iconTheme: const IconThemeData(color: Colors.white),
+                flexibleSpace: FlexibleSpaceBar(
+                  centerTitle: true,
+                  titlePadding: const EdgeInsets.symmetric(horizontal: 48, vertical: 12),
+                  title: Text(
+                    course.courseName ?? 'تفاصيل الدورة',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                    textAlign: TextAlign.center,
+                  ),
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [theme.primaryColor, theme.colorScheme.secondary],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: const Icon(Icons.school_outlined, color: Colors.white24, size: 150),
+                  ),
+                ),
+              ),
+
+              // 2. محتوى الصفحة
+              SliverList(
+                delegate: SliverChildListDelegate([
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildInfoCard(theme, course).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
+                        _buildSection(theme, 'وصف الدورة', course.description, isDescription: true).animate().fadeIn(delay: 300.ms),
+                        _buildSkillsSection(theme, 'المهارات المكتسبة', course.skills).animate().fadeIn(delay: 400.ms).slideX(begin: -0.2),
+                        const SizedBox(height: 40),
+                        if (authProvider.isAuthenticated)
+                          Center(
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.app_registration_rounded),
+                              label: const Text('التسجيل في الدورة'),
+                              onPressed: () => _enrollInCourse(course),
+                              style: theme.elevatedButtonTheme.style?.copyWith(
+                                padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 48, vertical: 16)),
+                              ),
+                            ).animate(delay: 500.ms).scale(duration: 500.ms, curve: Curves.elasticOut),
+                          ),
+                      ],
+                    ),
+                  )
+                ]),
+              ),
+            ],
+          );
         },
+      ),
+    );
+  }
+
+  // --- دوال مساعدة لتنظيم الكود ---
+  Widget _buildSectionTitle(ThemeData theme, String title) {
+    return Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: theme.primaryColor));
+  }
+
+  Widget _buildInfoCard(ThemeData theme, TrainingCourse course) {
+    return Card(
+      elevation: 4,
+      shadowColor: Colors.black.withOpacity(0.1),
+      margin: const EdgeInsets.only(bottom: 24),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            _buildInfoRow(theme, Icons.person_pin_circle_outlined, 'المدرب', course.trainersName ?? 'غير معروف'),
+            _buildInfoRow(theme, Icons.business_outlined, 'الجهة التدريبية', course.trainersSite ?? 'غير محدد'),
+            _buildInfoRow(theme, Icons.location_on_outlined, 'الموقع', course.site ?? 'أونلاين'),
+            _buildInfoRow(theme, Icons.bar_chart_outlined, 'المستوى', course.stage ?? 'مبتدئ'),
+            _buildInfoRow(theme, Icons.calendar_today_outlined, 'التاريخ',
+              '${course.startDate != null ? DateFormat('dd/MM', 'ar').format(course.startDate!) : ''} - ${course.endDate != null ? DateFormat('dd/MM/yyyy', 'ar').format(course.endDate!) : ''}',
+            ),
+            _buildInfoRow(theme, Icons.workspace_premium_outlined, 'شهادة', course.certificate ?? 'لا يوجد', noDivider: true),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(ThemeData theme, IconData icon, String label, String value, {bool noDivider = false}) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: theme.primaryColor, size: 20),
+            const SizedBox(width: 16),
+            Text('$label:', style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(width: 8),
+            Expanded(child: Text(value, style: theme.textTheme.bodyLarge, overflow: TextOverflow.ellipsis)),
+          ],
+        ),
+        if (!noDivider) const Divider(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildSection(ThemeData theme, String title, String? content, {bool isDescription = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle(theme, title),
+          const SizedBox(height: 8),
+          Text(
+            content ?? (isDescription ? 'لا يوجد وصف.' : 'غير محدد.'),
+            style: theme.textTheme.bodyLarge?.copyWith(height: isDescription ? 1.7 : 1.4, fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkillsSection(ThemeData theme, String title, String? skills) {
+    final skillList = skills?.split(',').where((s) => s.trim().isNotEmpty).toList() ?? [];
+    if (skillList.isEmpty) return const SizedBox.shrink(); // لا تعرض القسم إذا لم تكن هناك مهارات
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle(theme, title),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8.0,
+            runSpacing: 8.0,
+            children: skillList.map((skill) => Chip(
+              label: Text(skill.trim(), style: TextStyle(color: theme.primaryColor)),
+              backgroundColor: theme.primaryColor.withOpacity(0.1),
+              side: BorderSide.none,
+            )).toList(),
+          ),
+        ],
       ),
     );
   }

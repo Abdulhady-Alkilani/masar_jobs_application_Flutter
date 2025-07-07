@@ -47,36 +47,17 @@ class AdminUserProvider extends ChangeNotifier {
 
 
   // جلب جميع المستخدمين (للأدمن) - الصفحة الأولى
+  // في AdminUserProvider
   Future<void> fetchAllUsers(BuildContext context) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final token = Provider.of<AuthProvider>(context, listen: false).token;
-      if (token == null) throw ApiException(401, 'User not authenticated.');
-      // Optional: check user type is Admin
-
-      final paginatedResponse = await _apiService.fetchAllUsers(token!, page: 1);
-      // print('Fetched initial admin users response: $paginatedResponse'); // Debug print
-
-      // استخدم التابع المساعد للتحويل الآمن
-      _users = _convertDynamicListToUserList(paginatedResponse.data);
-
-
-      _currentPage = paginatedResponse.currentPage ?? 1;
-      _lastPage = paginatedResponse.lastPage;
-
-    } on ApiException catch (e) {
-      _error = e.message;
-      print('API Exception during fetchAllUsersAdmin: ${e.toString()}');
-    } catch (e) {
-      _error = 'Failed to load users: ${e.toString()}';
-      print('Unexpected error during fetchAllUsersAdmin: ${e.toString()}');
-    } finally {
-      _isLoading = false;
+    // ...
+    final token = Provider.of<AuthProvider>(context, listen: false).token;
+    print("AdminUserProvider: Fetching users with token: $token"); // <-- أضف هذا
+    if (token == null) {
+      _error = 'Token is null, cannot fetch users.';
       notifyListeners();
+      return;
     }
+    // ...
   }
 
   // جلب الصفحات التالية من المستخدمين

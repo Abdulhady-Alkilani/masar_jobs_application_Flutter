@@ -13,19 +13,20 @@ class PublicGroupProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // جلب قائمة المجموعات (لا يوجد تقسيم صفحات في المسار العام)
   Future<void> fetchGroups() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
-
     try {
       _groups = await _apiService.fetchGroups();
-
     } on ApiException catch (e) {
       _error = e.message;
+      // --- أضف هذا السطر للطباعة ---
+      print("===== API ERROR in PublicGroupProvider: $e =====");
     } catch (e) {
       _error = 'Failed to load groups: ${e.toString()}';
+      // --- أضف هذا السطر للطباعة ---
+      print("===== GENERIC ERROR in PublicGroupProvider: $e =====");
     } finally {
       _isLoading = false;
       notifyListeners();

@@ -1,147 +1,160 @@
-// lib/screens/public_views/public_article_details_screen.dart
+// lib/screens/details/article_details_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:intl/intl.dart'; // لتنسيق التاريخ
-// ستحتاج مكتبة url_launcher لفتح الروابط إذا وجدت في المحتوى أو كجزء من المقال
-// import 'package:url_launcher/url_launcher.dart';
-// import 'package:url_launcher/url_launcher_string.dart';
-
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:shimmer/shimmer.dart'; // لاستخدامه في تحميل الصور
 import '../../models/article.dart';
-import '../../providers/public_article_provider.dart';
-import '../../services/api_service.dart'; // لاستخدام ApiException
 
-class PublicArticleDetailsScreen extends StatefulWidget {
-  final int articleId;
+class ArticleDetailsScreen extends StatelessWidget {
+  final Article article;
+  const ArticleDetailsScreen({Key? key, required this.article}) : super(key: key);
 
-  const PublicArticleDetailsScreen({super.key, required this.articleId});
+  // دالة لفتح الرابط
+  Future<void> _launchUrl(BuildContext context, String urlString) async {
+    // --- خطوة تشخيصية: طباعة الرابط قبل محاولة فتحه ---
+    print("Attempting to launch URL: $urlString");
 
-  @override
-  State<PublicArticleDetailsScreen> createState() => _PublicArticleDetailsScreenState();
-}
+    // التأكد من أن الرابط كامل
+    if (!urlString.startsWith('http')) {
+      // يمكنك إضافة عنوان السيرفر الأساسي هنا إذا كانت الروابط نسبية
+      // urlString = "https://your-server.com" + urlString;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('الرابط غير صالح: $urlString')),
+      );
+      return;
+    }
 
-class _PublicArticleDetailsScreenState extends State<PublicArticleDetailsScreen> {
-  // لا حاجة لتهيئة Provider هنا، سيتم استخدامه في FutureBuilder
-
-  // !!! استبدل هذا الرابط بعنوان موقعك الأساسي إذا لم يكن موجوداً في ApiService أو مكان عام !!!
-  // يمكن أيضاً إضافة baseUrl كـ static const في ApiService أو Util Class
-  static const String baseUrl = 'https://powderblue-woodpecker-887296.hostingersite.com';
-
+    final Uri url = Uri.parse(urlString);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('لا يمكن فتح الرابط: $urlString')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // يمكن الوصول إلى Provider للاستدعاء فقط (listen: false) إذا لزم الأمر
-    // final articleProvider = Provider.of<PublicArticleProvider>(context, listen: false);
+    // --- جمل الطباعة التشخيصية ---
+    print("--- Building ArticleDetailsScreen ---");
+    print("Article Title: ${article.title}");
+    print("Article Photo URL from API: ${article.articlePhoto}");
+    print("Article PDF Link from API: ${article.pdfLink}");
+    // -----------------------------
 
+    final theme = Theme.of(context);
+    final bool hasPdf = article.pdfLink != null && article.pdfLink!.isNotEmpty;
+    final bool hasPhoto = article.articlePhoto != null && article.articlePhoto!.isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('تفاصيل المقال'), // يمكن تغيير العنوان لاحقاً بعد جلب البيانات
-      ),
-      // استخدام FutureBuilder لجلب بيانات المقال عند بناء الشاشة
-      body: FutureBuilder<Article?>(
-        // استخدام تابع جلب المقال الفردي من Provider
-        // نستخدم listen: false لأننا داخل FutureBuilder ونريد فقط النتيجة الأولية المستقبلية
-        future: Provider.of<PublicArticleProvider>(context, listen: false).fetchArticle(widget.articleId),
-        builder: (context, snapshot) {
-          // حالات التحميل والخطأ والبيانات
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            // عرض خطأ من الـ Provider إذا كان متاحاً، أو خطأ snapshot
-            // هنا نستخدم listen: false للحفاظ على الأداء داخل FutureBuilder
-            final provider = Provider.of<PublicArticleProvider>(context, listen: false);
-            final errorMessage = provider.error ?? snapshot.error?.toString() ?? 'حدث خطأ غير معروف';
-            return Center(child: Text('حدث خطأ: $errorMessage'));
-          } else if (!snapshot.hasData || snapshot.data == null) {
-            return const Center(child: Text('لم يتم العثور على المقال.'));
-          } else {
-            // عرض تفاصيل المقال بعد جلبها بنجاح
-            final article = snapshot.data!;
-            final imageUrl = (article.articlePhoto != null && article.articlePhoto!.isNotEmpty)
-                ? baseUrl + article.articlePhoto!
-                : null;
+      body: CustomScrollView(
+        slivers: [
+          // 1. الشريط العلوي (Header) مع الصورة
+          SliverAppBar(
+            expandedHeight: 300.0,
+            pinned: true,
+            stretch: true,
+            backgroundColor: theme.primaryColor,
+            iconTheme: const IconThemeData(color: Colors.white),
+            flexibleSpace: FlexibleSpaceBar(
+              centerTitle: true,
+              titlePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              title: Text(
+                article.title ?? 'تفاصيل المقال',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  shadows: [Shadow(blurRadius: 6, color: Colors.black87)],
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              background: hasPhoto
+                  ? Image.network(
+                article.articlePhoto!,
+                fit: BoxFit.cover,
+                color: Colors.black.withOpacity(0.3),
+                colorBlendMode: BlendMode.darken,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Shimmer.fromColors(
+                      baseColor: Colors.grey.shade600,
+                      highlightColor: Colors.grey.shade500,
+                      child: Container(color: Colors.white));
+                },
+                errorBuilder: (context, error, stackTrace) =>
+                const Center(child: Icon(Icons.broken_image, color: Colors.white54, size: 60)),
+              )
+                  : Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [theme.primaryColor, theme.colorScheme.secondary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: const Icon(Icons.article_outlined, color: Colors.white24, size: 150),
+              ),
+            ),
+          ),
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+          // 2. محتوى الصفحة
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // صورة المقال
-                  if (imageUrl != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          imageUrl,
-                          height: 250,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                          const Center(child: Icon(Icons.image_not_supported, size: 80, color: Colors.grey)),
-                        ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: CircleAvatar(
+                      radius: 24,
+                      backgroundColor: theme.primaryColor.withOpacity(0.1),
+                      child: Text(
+                        article.user?.firstName?.substring(0, 1) ?? 'A',
+                        style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.bold, fontSize: 20),
                       ),
                     ),
+                    title: Text(
+                      'بقلم: ${article.user?.firstName ?? 'خبير'} ${article.user?.lastName ?? ''}',
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      'تاريخ النشر: ${article.date != null ? DateFormat('dd MMMM yyyy', 'ar').format(article.date!) : 'غير محدد'}',
+                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+                    ),
+                  ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.3),
 
-                  Text(
-                    article.title ?? 'بدون عنوان',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'نوع المقال: ${article.type ?? 'غير محدد'}',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey.shade700),
-                  ),
-                  const SizedBox(height: 8),
-                  if (article.date != null)
-                    Text(
-                      'تاريخ النشر: ${DateFormat.yMMMd('ar').format(article.date!)}',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey),
-                    ),
-                  const SizedBox(height: 16),
-                  // كاتب المقال
-                  if (article.user != null)
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 18,
-                          // backgroundImage: NetworkImage(...) إذا كان للمستخدم صورة في الموديل
-                          child: Text(article.user!.firstName?.isNotEmpty == true ? article.user!.firstName![0] : '?', style: TextStyle(fontSize: 18)),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'الكاتب: ${article.user!.firstName} ${article.user!.lastName}',
-                          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
-                        ),
-                      ],
-                    ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'المحتوى:',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
+                  const Divider(height: 32),
+
                   Text(
                     article.description ?? 'لا يوجد محتوى لهذا المقال.',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 24), // مساحة إضافية قبل التواريخ
-                  Text(
-                    'أنشئ في: ${article.createdAt != null ? DateFormat.yMMMd('ar').add_Hms().format(article.createdAt!) : 'غير متاح'}',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  Text(
-                    'حدث في: ${article.updatedAt != null ? DateFormat.yMMMd('ar').add_Hms().format(article.updatedAt!) : 'غير متاح'}',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
+                    style: theme.textTheme.bodyLarge?.copyWith(height: 1.8, fontSize: 18),
+                  ).animate().fadeIn(delay: 400.ms).slideX(begin: -0.2),
 
-
+                  if (hasPdf) ...[
+                    const SizedBox(height: 40),
+                    Center(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _launchUrl(context, article.pdfLink!),
+                        icon: const Icon(Icons.picture_as_pdf_outlined),
+                        label: const Text('تحميل الملف المرفق (PDF)'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          backgroundColor: theme.colorScheme.error.withOpacity(0.9),
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ).animate(delay: 600.ms).scale(),
+                  ]
                 ],
               ),
-            );
-          }
-        },
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -181,7 +181,7 @@ class _CourseCardState extends State<CourseCard> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => PublicTrainingCourseDetailsScreen(courseId: widget.course.courseId!),
+                      builder: (context) => PublicCourseDetailsScreen(courseId: widget.course.courseId!),
                     ),
                   );
                 } else {

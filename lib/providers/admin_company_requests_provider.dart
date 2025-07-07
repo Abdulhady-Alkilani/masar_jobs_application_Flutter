@@ -12,6 +12,9 @@ class AdminCompanyRequestsProvider extends ChangeNotifier {
   int _currentPage = 1;
   int? _lastPage;
   bool _isFetchingMore = false;
+  int? _processingCompanyId;
+  bool isProcessing(int companyId) => _processingCompanyId == companyId;
+
 
   List<Company> get companyRequests => _companyRequests;
   bool get isLoading => _isLoading;
@@ -21,6 +24,28 @@ class AdminCompanyRequestsProvider extends ChangeNotifier {
 
 
   final ApiService _apiService = ApiService();
+
+  Future<void> _processRequest(BuildContext context, int companyId, Future<Company> Function(String, int) apiCall) async {
+    _processingCompanyId = companyId; // تحديد الشركة قيد المعالجة
+    notifyListeners();
+
+    try {
+      final token = Provider.of<AuthProvider>(context, listen: false).token;
+      if (token == null) throw ApiException(401, 'User not authenticated.');
+
+      await apiCall(token, companyId);
+
+      _companyRequests.removeWhere((company) => company.companyId == companyId);
+
+    } on ApiException catch (e) {
+      // يمكنك عرض رسالة خطأ هنا إذا أردت
+      print('Failed to process request for company $companyId: ${e.message}');
+      rethrow; // رمي الخطأ للواجهة
+    } finally {
+      _processingCompanyId = null; // إنهاء حالة المعالجة
+      notifyListeners();
+    }
+  }
 
   // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<Company>
   List<Company> _convertDynamicListToCompanyList(List<dynamic>? data) {

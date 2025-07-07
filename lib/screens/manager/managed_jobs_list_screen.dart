@@ -152,7 +152,7 @@ class _ManagedJobsListScreenState extends State<ManagedJobsListScreen> {
                   const Icon(Icons.people_alt_outlined, size: 16, color: Colors.blue),
                   const SizedBox(width: 4),
                   // TODO: عرض عدد المتقدمين إذا كان متاحاً في الموديل
-                  const Text(' 5 متقدمين'), // مثال
+                  const Text(' 6 متقدمين'), // مثال
                   const Spacer(),
                   Chip(
                     label: Text(job.status ?? 'حالة غير معروفة'),

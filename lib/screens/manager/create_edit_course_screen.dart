@@ -2,14 +2,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import '../../providers/managed_training_course_provider.dart';
+
 import '../../models/training_course.dart';
+import '../../providers/managed_training_course_provider.dart';
 import '../../services/api_service.dart';
 
 class CreateEditCourseScreen extends StatefulWidget {
-  final TrainingCourse? course; // إذا كان null، فهذا يعني إنشاء جديد
-
+  final TrainingCourse? course;
   const CreateEditCourseScreen({super.key, this.course});
 
   @override
@@ -17,185 +18,231 @@ class CreateEditCourseScreen extends StatefulWidget {
 }
 
 class _CreateEditCourseScreenState extends State<CreateEditCourseScreen> {
-  final _formKey = GlobalKey<FormState>();
   late Map<String, dynamic> _courseData;
   bool get _isEditing => widget.course != null;
-
-  late TextEditingController _titleController;
-  late TextEditingController _descriptionController;
-  late TextEditingController _siteController;
-  late TextEditingController _hoursController;
-  late TextEditingController _dateController;
 
   @override
   void initState() {
     super.initState();
-
-    // تهيئة البيانات
+    final course = widget.course;
     _courseData = {
-      'Title': widget.course?.site ?? '',
-      'Description': widget.course?.description ?? '',
-      'Site': widget.course?.site ?? '',
-      'Hours': widget.course?.hours?.toString() ?? '',
-      'Status': widget.course?.status ?? 'مفعل',
-      'Date': widget.course?.site,
+      'Course name': course?.courseName ?? '',
+      'Trainers name': course?.trainersName ?? '',
+      'Course Description': course?.description ?? '',
+      'Site': course?.site ?? '',
+      'Skills': course?.skills ?? '',
+      'Stage': course?.stage ?? 'مبتدئ',
+      'Start Date': course?.startDate,
+      'End Date': course?.endDate,
     };
-
-    // تهيئة الـ Controllers
-    _titleController = TextEditingController(text: _courseData['Title']);
-    _descriptionController = TextEditingController(text: _courseData['Description']);
-    _siteController = TextEditingController(text: _courseData['Site']);
-    _hoursController = TextEditingController(text: _courseData['Hours']);
-    _dateController = TextEditingController(
-      text: _courseData['Date'] != null
-          ? DateFormat('yyyy-MM-dd').format(_courseData['Date'])
-          : '',
-    );
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+  // دالة لحساب نسبة اكتمال النموذج
+  double _calculateProgress() {
+    int totalFields = 6; // عدد الحقول الرئيسية
+    int filledFields = 0;
+    if (_courseData['Course name'].isNotEmpty) filledFields++;
+    if (_courseData['Trainers name'].isNotEmpty) filledFields++;
+    if (_courseData['Course Description'].isNotEmpty) filledFields++;
+    if (_courseData['Site'].isNotEmpty) filledFields++;
+    if (_courseData['Skills'].isNotEmpty) filledFields++;
+    if (_courseData['Start Date'] != null) filledFields++;
+    return filledFields / totalFields;
+  }
+
+  // دالة لفتح حوار التعديل
+  Future<void> _showEditDialog(String fieldKey, String title, {int maxLines = 1, TextInputType keyboardType = TextInputType.text}) async {
+    final controller = TextEditingController(text: _courseData[fieldKey]);
+    final result = await showDialog<String>(
       context: context,
-      initialDate: _courseData['Date'] ?? DateTime.now(),
-      firstDate: DateTime(2020),
+      builder: (context) => AlertDialog(
+        title: Text('تعديل $title'),
+        content: TextFormField(controller: controller, maxLines: maxLines, keyboardType: keyboardType, autofocus: true),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('إلغاء')),
+          ElevatedButton(onPressed: () => Navigator.of(context).pop(controller.text), child: const Text('حفظ')),
+        ],
+      ),
+    );
+    if (result != null) setState(() => _courseData[fieldKey] = result);
+  }
+
+  // دالة اختيار التواريخ
+  Future<void> _selectDateRange() async {
+    final picked = await showDateRangePicker(
+      context: context,
+      initialDateRange: DateTimeRange(
+        start: _courseData['Start Date'] ?? DateTime.now(),
+        end: _courseData['End Date'] ?? DateTime.now().add(const Duration(days: 7)),
+      ),
+      firstDate: DateTime.now(),
       lastDate: DateTime(2101),
     );
-    if (picked != null && picked != _courseData['Date']) {
+    if (picked != null) {
       setState(() {
-        _courseData['Date'] = picked;
-        _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
+        _courseData['Start Date'] = picked.start;
+        _courseData['End Date'] = picked.end;
       });
     }
   }
 
+  // دالة الحفظ النهائية
   Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
+    final provider = Provider.of<ManagedTrainingCourseProvider>(context, listen: false);
 
-      final provider = Provider.of<ManagedTrainingCourseProvider>(context, listen: false);
+    // تحويل التواريخ قبل الإرسال
+    _courseData['Start Date'] = (_courseData['Start Date'] as DateTime?)?.toIso8601String();
+    _courseData['End Date'] = (_courseData['End Date'] as DateTime?)?.toIso8601String();
 
-      // تحويل التاريخ إلى صيغة ISO 8601
-      if (_courseData['Date'] != null) {
-        _courseData['Date'] = (_courseData['Date'] as DateTime).toIso8601String();
-      }
-
-      // تحويل عدد الساعات إلى int
-      if (_courseData['Hours'] != null && _courseData['Hours'].isNotEmpty) {
-        _courseData['Hours'] = int.tryParse(_courseData['Hours']);
+    try {
+      if (_isEditing) {
+        await provider.updateCourse(context, widget.course!.courseId!, _courseData);
       } else {
-        _courseData.remove('Hours'); // إزالته إذا كان فارغًا
+        await provider.createCourse(context, _courseData);
       }
-
-      try {
-        if (_isEditing) {
-          await provider.updateCourse(context, widget.course!.courseId!, _courseData);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم تحديث الدورة بنجاح'), backgroundColor: Colors.green),
-          );
-        } else {
-          await provider.createCourse(context, _courseData);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم إنشاء الدورة بنجاح'), backgroundColor: Colors.green),
-          );
-        }
-        Navigator.pop(context);
-      } on ApiException catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل العملية: ${e.message}'), backgroundColor: Colors.red),
-        );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تمت العملية بنجاح'), backgroundColor: Colors.green));
+        Navigator.of(context).pop();
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل العملية: ${e.message}'), backgroundColor: Colors.red));
       }
     }
   }
 
   @override
-  void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    _siteController.dispose();
-    _hoursController.dispose();
-    _dateController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<ManagedTrainingCourseProvider>(context);
+    final theme = Theme.of(context);
+    final progress = _calculateProgress();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'تعديل الدورة التدريبية' : 'إنشاء دورة جديدة'),
+        title: Text(_isEditing ? 'تعديل الدورة' : 'دورة تدريبية جديدة'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(4.0),
+          child: AnimatedContainer(
+            duration: 500.ms,
+            height: 4.0,
+            width: MediaQuery.of(context).size.width * progress,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.secondary,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _submitForm,
+        label: Text(_isEditing ? 'حفظ التعديلات' : 'نشر الدورة'),
+        icon: Icon(_isEditing ? Icons.save_alt_rounded : Icons.publish_rounded),
+      ),
+      body: Consumer<ManagedTrainingCourseProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return ListView(
+            padding: const EdgeInsets.all(16.0),
             children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(labelText: 'عنوان الدورة'),
-                validator: (v) => v!.isEmpty ? 'هذا الحقل مطلوب' : null,
-                onSaved: (v) => _courseData['Title'] = v!,
+              _buildInfoCard(
+                icon: Icons.school_outlined,
+                title: 'عنوان الدورة',
+                value: _courseData['Course name'],
+                placeholder: 'مثال: مقدمة في Flutter',
+                onTap: () => _showEditDialog('Course name', 'عنوان الدورة'),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'وصف الدورة'),
-                maxLines: 4,
-                validator: (v) => v!.isEmpty ? 'هذا الحقل مطلوب' : null,
-                onSaved: (v) => _courseData['Description'] = v!,
+              _buildInfoCard(
+                icon: Icons.person_outline,
+                title: 'اسم المدرب',
+                value: _courseData['Trainers name'],
+                placeholder: 'مثال: د. أحمد خالد',
+                onTap: () => _showEditDialog('Trainers name', 'اسم المدرب'),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _siteController,
-                decoration: const InputDecoration(labelText: 'الموقع'),
-                validator: (v) => v!.isEmpty ? 'هذا الحقل مطلوب' : null,
-                onSaved: (v) => _courseData['Site'] = v!,
+              _buildInfoCard(
+                icon: Icons.description_outlined,
+                title: 'وصف الدورة',
+                value: _courseData['Course Description'],
+                placeholder: 'وصف محتوى الدورة وأهدافها...',
+                onTap: () => _showEditDialog('Course Description', 'وصف الدورة', maxLines: 5),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _hoursController,
-                decoration: const InputDecoration(labelText: 'عدد الساعات'),
-                keyboardType: TextInputType.number,
-                onSaved: (v) => _courseData['Hours'] = v,
+              _buildInfoCard(
+                icon: Icons.star_border_rounded,
+                title: 'المهارات المكتسبة (مفصولة بفاصلة)',
+                value: _courseData['Skills'],
+                placeholder: 'مثال: Dart, State Management',
+                onTap: () => _showEditDialog('Skills', 'المهارات'),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _dateController,
-                decoration: const InputDecoration(
-                  labelText: 'تاريخ بدء الدورة',
-                  suffixIcon: Icon(Icons.calendar_today),
-                ),
-                readOnly: true,
-                onTap: () => _selectDate(context),
+              _buildDateRangeCard(
+                icon: Icons.date_range_outlined,
+                title: 'تاريخ بدء وانتهاء الدورة',
+                startDate: _courseData['Start Date'],
+                endDate: _courseData['End Date'],
+                onTap: _selectDateRange,
               ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _courseData['Status'],
-                decoration: const InputDecoration(labelText: 'الحالة'),
-                items: ['مفعل', 'معلق', 'محذوف'].map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
+              _buildDropdownCard(
+                title: 'المستوى',
+                currentValue: _courseData['Stage'],
+                items: ['مبتدئ', 'متوسط', 'متقدم'],
                 onChanged: (newValue) {
-                  setState(() {
-                    _courseData['Status'] = newValue!;
-                  });
+                  if (newValue != null) setState(() => _courseData['Stage'] = newValue);
                 },
               ),
-              const SizedBox(height: 32),
-              provider.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : ElevatedButton(
-                onPressed: _submitForm,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-                child: Text(_isEditing ? 'حفظ التعديلات' : 'إنشاء الدورة'),
-              ),
-            ],
+            ].animate(interval: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.2),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildInfoCard({required IconData icon, required String title, required String value, required String placeholder, required VoidCallback onTap}) {
+    final bool hasValue = value.isNotEmpty;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ListTile(
+        onTap: onTap,
+        leading: Icon(icon, color: Theme.of(context).primaryColor),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(
+          hasValue ? value : placeholder,
+          style: TextStyle(color: hasValue ? Colors.black87 : Colors.grey),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: const Icon(Icons.edit_outlined, color: Colors.grey, size: 20),
+      ),
+    );
+  }
+
+  Widget _buildDateRangeCard({required IconData icon, required String title, DateTime? startDate, DateTime? endDate, required VoidCallback onTap}) {
+    String dateText = 'اضغط للاختيار';
+    if (startDate != null && endDate != null) {
+      dateText = '${DateFormat('d/M/y', 'ar').format(startDate)} - ${DateFormat('d/M/y', 'ar').format(endDate)}';
+    }
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ListTile(
+        onTap: onTap,
+        leading: Icon(icon, color: Theme.of(context).primaryColor),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(dateText, style: TextStyle(color: startDate != null ? Colors.black87 : Colors.grey)),
+        trailing: const Icon(Icons.edit_calendar_outlined, color: Colors.grey, size: 20),
+      ),
+    );
+  }
+
+  Widget _buildDropdownCard({required String title, required String currentValue, required List<String> items, required ValueChanged<String?> onChanged}) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 5.0),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: currentValue,
+            isExpanded: true,
+            hint: Text(title),
+            items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+            onChanged: onChanged,
           ),
         ),
       ),

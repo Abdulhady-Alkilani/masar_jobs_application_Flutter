@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'articles/managed_articles_list_screen.dart';
-import 'courses/managed_courses_list_screen.dart'; // سننشئها لاحقاً
 import '../user_profile_screen.dart'; // لاستخدامها في ملفي الشخصي
 
 class ConsultantDashboardScreen extends StatelessWidget {
@@ -56,15 +55,7 @@ class ConsultantDashboardScreen extends StatelessWidget {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => const ManagedArticlesListScreen()));
                     },
                   ),
-                  _buildDashboardCard(
-                    context,
-                    title: 'إدارة دوراتي',
-                    icon: Icons.school_outlined,
-                    color: Colors.orange,
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const ManagedCoursesListScreen()));
-                    },
-                  ),
+
                   _buildDashboardCard(
                     context,
                     title: 'ملفي الشخصي',

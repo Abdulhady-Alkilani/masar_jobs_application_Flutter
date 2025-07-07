@@ -2,11 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:masar_jobs/screens/public/public_article_details_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../providers/public_article_provider.dart';
 import '../../models/article.dart';
 import '../widgets/empty_state_widget.dart';
+import '../widgets/rive_refresh_indicator.dart';
+
 
 class PublicArticlesView extends StatefulWidget {
   const PublicArticlesView({super.key});
@@ -32,7 +35,9 @@ class _PublicArticlesViewState extends State<PublicArticlesView> with AutomaticK
     super.build(context);
     final provider = context.watch<PublicArticleProvider>();
 
-    if (provider.isLoading && provider.articles.isEmpty) return _buildShimmerLoading();
+    if (provider.isLoading && provider.articles.isEmpty) {
+      return _buildShimmerLoading();
+    }
     if (provider.error != null && provider.articles.isEmpty) {
       return EmptyStateWidget(
         icon: Icons.cloud_off_rounded,
@@ -49,10 +54,11 @@ class _PublicArticlesViewState extends State<PublicArticlesView> with AutomaticK
       );
     }
 
-    return RefreshIndicator(
+    // --- 2. هنا التعديل ---
+    return RiveRefreshIndicator( // <-- استخدام الويدجت الجديدة بدلاً من RefreshIndicator
       onRefresh: () => provider.fetchArticles(),
       child: GridView.builder(
-        padding: const EdgeInsets.fromLTRB(16, kToolbarHeight + 16, 16, 16),
+        padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 16,
@@ -71,12 +77,13 @@ class _PublicArticlesViewState extends State<PublicArticlesView> with AutomaticK
     );
   }
 
+  // ... (باقي الكود: _buildShimmerLoading و ArticleCard يبقى كما هو)
   Widget _buildShimmerLoading() {
     return Shimmer.fromColors(
       baseColor: Colors.grey.shade300,
       highlightColor: Colors.grey.shade100,
       child: GridView.builder(
-        padding: const EdgeInsets.fromLTRB(16, kToolbarHeight + 16, 16, 16),
+        padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.8,
         ),
@@ -112,32 +119,51 @@ class _ArticleCardState extends State<ArticleCard> {
         scale: _isHovered ? 1.05 : 1.0,
         child: Card(
           elevation: _isHovered ? 12 : 4,
-          shadowColor: _isHovered ? Theme.of(context).colorScheme.secondary.withOpacity(0.2) : Colors.black.withOpacity(0.1),
+          shadowColor: _isHovered ? Theme.of(context).colorScheme.secondary.withOpacity(0.3) : Colors.black.withOpacity(0.1),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ArticleDetailsScreen(article: widget.article),
+                ),
+              );
+            },
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // الصورة
-                Container(
-                  color: Colors.grey.shade200,
-                  // TODO: استبدل هذا بصورة المقال الفعلية
-                  child: Icon(Icons.article_outlined, size: 60, color: Colors.grey.shade400),
-                ),
-                // تدرج لوني في الأسفل لتوضيح النص
+                if (widget.article.articlePhoto != null && widget.article.articlePhoto!.isNotEmpty)
+                  Image.network(
+                    widget.article.articlePhoto!,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Shimmer.fromColors(
+                        baseColor: Colors.grey.shade300,
+                        highlightColor: Colors.grey.shade100,
+                        child: Container(color: Colors.white),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) =>
+                    const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                  )
+                else
+                  Container(
+                    color: Colors.grey.shade200,
+                    child: Icon(Icons.article_outlined, size: 60, color: Colors.grey.shade400),
+                  ),
                 const DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [Colors.transparent, Colors.black87],
-                      begin: Alignment.topCenter,
+                      begin: Alignment.center,
                       end: Alignment.bottomCenter,
-                      stops: [0.5, 1.0],
+                      stops: [0.6, 1.0],
                     ),
                   ),
                 ),
-                // النص
                 Positioned(
                   bottom: 12,
                   left: 12,
@@ -148,9 +174,8 @@ class _ArticleCardState extends State<ArticleCard> {
                       Text(
                         widget.article.title ?? 'عنوان المقال',
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16,
+                            shadows: [Shadow(blurRadius: 2, color: Colors.black54)]
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -158,7 +183,7 @@ class _ArticleCardState extends State<ArticleCard> {
                       const SizedBox(height: 4),
                       Text(
                         'بقلم: ${widget.article.user?.firstName ?? ''}',
-                        style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
+                        style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12),
                       ),
                     ],
                   ),

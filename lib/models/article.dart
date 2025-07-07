@@ -8,6 +8,7 @@ class Article {
   final DateTime? date; // Publish date
   final String? type;
   final String? articlePhoto;
+  final String? pdfLink; // <-- 1. أضف هذا الحقل
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final PartialUser? user; // Nested user object (often partial in lists)
@@ -20,6 +21,7 @@ class Article {
     this.date,
     this.type,
     this.articlePhoto,
+    this.pdfLink,
     this.createdAt,
     this.updatedAt,
     this.user,
@@ -35,6 +37,7 @@ class Article {
       date: json['Date'] != null ? DateTime.parse(json['Date'] as String) : null,
       type: json['Type'] as String?,
       articlePhoto: json['Article Photo'] as String?,
+      pdfLink: json['pdf_link'] as String?, // <-- 3. فك ترميزه من JSON
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,

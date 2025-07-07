@@ -142,7 +142,7 @@ class _ManagedCompanyDashboardScreenState extends State<ManagedCompanyDashboardS
               leading: const Icon(Icons.edit_note),
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => EditCompanyScreen(company: company)));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => EditCompanyScreen(key: company)));
               },
             ),
             const Divider(),

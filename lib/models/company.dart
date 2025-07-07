@@ -1,8 +1,10 @@
-import 'user.dart'; // <--- 1. استيراد موديل المستخدم
+// lib/models/company.dart
+
+import 'user.dart';
 
 class Company {
   final int? companyId;
-  final int? userId; // Associated user ID (Company Manager)
+  final int? userId;
   final String? name;
   final String? email;
   final String? phone;
@@ -10,13 +12,16 @@ class Company {
   final String? country;
   final String? city;
   final String? detailedAddress;
-  final String? media; // Stored as string (path or JSON array string)
+  final String? media;
   final String? webSite;
-  final String? status; // 'pending', 'approved', 'rejected'
+  final String? status;
   final DateTime? createdAt;
   final DateTime? updatedAt;
-  final User? user; // <--- 2. إضافة حقل المستخدم المرتبط
+  final User? user;
 
+  // --- الحقول الجديدة ---
+  final int? newApplicantsCount;
+  final int? openJobsCount;
 
   Company({
     this.companyId,
@@ -33,11 +38,13 @@ class Company {
     this.status,
     this.createdAt,
     this.updatedAt,
-    this.user, // <--- 3. إضافة الحقل للباني (Constructor)
+    this.user,
+    // --- إضافة الحقول إلى الباني ---
+    this.newApplicantsCount,
+    this.openJobsCount,
   });
 
   factory Company.fromJson(Map<String, dynamic> json) {
-    // Note: JSON keys might have spaces or unconventional names
     return Company(
       companyId: json['CompanyID'] as int?,
       userId: json['UserID'] as int?,
@@ -51,35 +58,15 @@ class Company {
       media: json['Media'] as String?,
       webSite: json['Web site'] as String?,
       status: json['status'] as String?,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
-          : null,
-      // <--- 4. إضافة منطق فك ترميز حقل 'user'
-      user: json['user'] != null && json['user'] is Map<String, dynamic>
-          ? User.fromJson(json['user'] as Map<String, dynamic>)
-          : null,
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : null,
+      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at']) : null,
+      user: json['user'] != null ? User.fromJson(json['user']) : null,
+      // --- فك ترميز الحقول من الـ JSON ---
+      // تأكد من أن الـ API يرسل حقولاً بهذه الأسماء
+      newApplicantsCount: json['new_applicants_count'] as int?,
+      openJobsCount: json['open_jobs_count'] as int?,
     );
   }
 
-  // Optional: toJson for creating/updating companies (Admin/Manager)
-  Map<String, dynamic> toJson() {
-    // Note: JSON keys might have spaces or unconventional names
-    return {
-      'CompanyID': companyId,
-      'UserID': userId,
-      'Name': name,
-      'Email': email,
-      'Phone': phone,
-      'Description': description,
-      'Country': country,
-      'City': city,
-      'Detailed Address': detailedAddress,
-      'Media': media,
-      'Web site': webSite,
-      'status': status,
-    };
-  }
+// ... toJson method ...
 }
