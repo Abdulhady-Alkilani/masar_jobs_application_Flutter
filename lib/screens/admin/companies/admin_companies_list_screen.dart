@@ -6,6 +6,7 @@ import '../../../providers/admin_company_provider.dart';
 import '../../../models/company.dart';
 import 'admin_create_edit_company_screen.dart'; // سننشئ هذه الشاشة لاحقًا
 import '../../../services/api_service.dart'; // لاستخدام ApiException
+import '../../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 
 class AdminCompaniesListScreen extends StatefulWidget {
   const AdminCompaniesListScreen({super.key});
@@ -103,7 +104,7 @@ class _AdminCompaniesListScreenState extends State<AdminCompaniesListScreen> {
       body: Consumer<AdminCompanyProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.companies.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
 
           if (provider.error != null && provider.companies.isEmpty) {
@@ -129,7 +130,7 @@ class _AdminCompaniesListScreenState extends State<AdminCompaniesListScreen> {
                 if (index == provider.companies.length) {
                   return const Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: Center(child: CircularProgressIndicator()),
+                    child: Center(child: RiveLoadingIndicator()),
                   );
                 }
                 final company = provider.companies[index];

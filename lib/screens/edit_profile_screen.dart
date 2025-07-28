@@ -3,12 +3,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:io'; // Import for File
+import 'package:image_picker/image_picker.dart'; // Import for ImagePicker
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../models/user.dart';
 import '../../models/skill.dart';
 import '../../providers/public_skill_provider.dart';
-import 'user_profile_screen.dart';
+import 'widgets/neumorphic_card.dart';
+import 'widgets/neumorphic_button.dart';
+import 'package:transparent_image/transparent_image.dart'; // For transparent image placeholder
+import '../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 
 class EditProfileScreen extends StatefulWidget {
   final User userToEdit;
@@ -28,6 +33,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _universityController = TextEditingController();
   final _gpaController = TextEditingController();
 
+  File? _imageFile; // For selected profile image
+  File? _coverImageFile; // For selected cover image
+
   List<Skill> _allSkills = [];
   List<Skill> _selectedSkills = [];
   bool _isLoadingSkills = true;
@@ -46,6 +54,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _selectedSkills = List<Skill>.from(widget.userToEdit.skills!);
     }
     _fetchAvailableSkills();
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> _pickCoverImage() async {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _coverImageFile = File(pickedFile.path);
+      });
+    }
   }
 
   Future<void> _fetchAvailableSkills() async {
@@ -93,6 +119,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     try {
       await authProvider.updateUserProfile(profileData);
+
+      // TODO: Implement image upload logic here
+      if (_imageFile != null) {
+        // Call ApiService to upload _imageFile as profile photo
+        // Example: await ApiService().uploadProfilePhoto(_imageFile!);
+        print('Uploading profile image: ${(_imageFile!).path}');
+      }
+      if (_coverImageFile != null) {
+        // Call ApiService to upload _coverImageFile as cover photo
+        // Example: await ApiService().uploadCoverPhoto(_coverImageFile!);
+        print('Uploading cover image: ${(_coverImageFile!).path}');
+      }
+
       final List<int> selectedSkillIds = _selectedSkills.map((s) => s.skillId!).toList();
       await authProvider.syncUserSkills(selectedSkillIds);
       if (!mounted) return;
@@ -134,7 +173,58 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- تطبيق الحركات على كل قسم على حدة ---
+              // Profile and Cover Photo Section
+              Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.bottomCenter,
+                children: [
+                  GestureDetector(
+                    onTap: _pickCoverImage,
+                    child: Container(
+                      height: 180,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: theme.primaryColor.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: _coverImageFile != null
+                          ? Image.file(_coverImageFile!, fit: BoxFit.cover)
+                          : (widget.userToEdit.profile?.coverPhoto != null && widget.userToEdit.profile!.coverPhoto!.isNotEmpty)
+                              ? FadeInImage.memoryNetwork(
+                                  placeholder: kTransparentImage,
+                                  image: widget.userToEdit.profile!.coverPhoto!,
+                                  fit: BoxFit.cover,
+                                  imageErrorBuilder: (context, error, stackTrace) =>
+                                      Image.asset('assets/image/default_cover.png', fit: BoxFit.cover),
+                                )
+                              : Image.asset('assets/image/default_cover.png', fit: BoxFit.cover),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -50,
+                    child: GestureDetector(
+                      onTap: _pickImage,
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor: theme.scaffoldBackgroundColor,
+                        child: CircleAvatar(
+                          radius: 46,
+                          backgroundImage: _imageFile != null
+                              ? FileImage(_imageFile!) as ImageProvider
+                              : (widget.userToEdit.photo != null && widget.userToEdit.photo!.isNotEmpty)
+                                  ? NetworkImage(widget.userToEdit.photo!)
+                                  : null,
+                          child: (_imageFile == null && (widget.userToEdit.photo == null || widget.userToEdit.photo!.isEmpty))
+                              ? Icon(Icons.camera_alt, size: 30, color: theme.primaryColor)
+                              : null,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 60), // Space for the overlapping avatar
+
               _buildSectionTitle(theme, "المعلومات الشخصية"),
               const SizedBox(height: 8),
               _buildInfoCard(
@@ -168,7 +258,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               _buildInfoCard(
                 children: [
                   _isLoadingSkills
-                      ? const Padding(padding: EdgeInsets.all(16.0), child: Center(child: CircularProgressIndicator()))
+                      ? const Padding(padding: EdgeInsets.all(16.0), child: Center(child: RiveLoadingIndicator())) // Replaced here
                       : _allSkills.isEmpty
                       ? const Padding(padding: EdgeInsets.all(16.0), child: Center(child: Text('لا توجد مهارات متاحة')))
                       : Padding(
@@ -208,7 +298,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 child: Consumer<AuthProvider>(
                   builder: (context, authProvider, child) {
                     return authProvider.isLoading
-                        ? const CircularProgressIndicator()
+                        ? const RiveLoadingIndicator() // Replaced here
                         : NeumorphicButton(
                       onTap: _saveProfile,
                       padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 60),
@@ -277,3 +367,4 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 }
+

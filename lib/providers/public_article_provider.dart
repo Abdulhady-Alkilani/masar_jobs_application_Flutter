@@ -1,132 +1,69 @@
 import 'package:flutter/material.dart';
-// لا تحتاج لتوكن لأن المسارات عامة
-// import 'package:provider/provider.dart'; // لا تحتاج Provider لاستدعاء AuthProvider هنا
-
 import '../models/article.dart';
-import '../models/paginated_response.dart';
 import '../services/api_service.dart';
 
-
 class PublicArticleProvider extends ChangeNotifier {
+  final ApiService _apiService = ApiService();
+
   List<Article> _articles = [];
   bool _isLoading = false;
+  bool _isFetchingMore = false;
   String? _error;
   int _currentPage = 1;
-  int? _lastPage;
-  bool _isFetchingMore = false;
+  bool _hasMorePages = true;
 
   List<Article> get articles => _articles;
   bool get isLoading => _isLoading;
-  String? get error => _error;
   bool get isFetchingMore => _isFetchingMore;
-  bool get hasMorePages => _lastPage == null || _currentPage < _lastPage!;
+  String? get error => _error;
+  bool get hasMorePages => _hasMorePages;
 
-
-  final ApiService _apiService = ApiService();
-
-  // !! تم حذف التابع المساعد _convertDynamicListToArticleList !!
-
-
-  // جلب أول صفحة من المقالات العامة
-  Future<void> fetchArticles({int page = 1}) async {
+  Future<void> fetchArticles() async {
+    if (_isLoading) return;
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      // هذا المسار عام لا يتطلب توكن
-      final paginatedResponse = await _apiService.fetchArticles(page: page);
-      // print('Fetched initial public articles response: $paginatedResponse'); // Debug print
-
-      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
-      // لأن التحويل الآمن أصبح يتم داخل PaginatedResponse.fromJson
+      final paginatedResponse = await _apiService.fetchArticles(page: 1);
       _articles = paginatedResponse.data ?? [];
-
-
       _currentPage = paginatedResponse.currentPage ?? 1;
-      _lastPage = paginatedResponse.lastPage;
-
-    } on ApiException catch (e) {
-      _error = e.message;
-      print('API Exception during fetchPublicArticles: ${e.toString()}');
+      _hasMorePages = paginatedResponse.nextPageUrl != null;
     } catch (e) {
-      _error = 'Failed to load articles: ${e.toString()}';
-      print('Unexpected error during fetchPublicArticles: ${e.toString()}');
+      _error = e.toString();
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // جلب الصفحات التالية من المقالات
   Future<void> fetchMoreArticles() async {
-    // لا تجلب المزيد إذا كنت تحمل بالفعل أو لا يوجد المزيد من الصفحات
-    if (_isFetchingMore || !hasMorePages) return;
-
+    if (_isFetchingMore || !_hasMorePages) return;
     _isFetchingMore = true;
-    // _error = null; // قد لا تريد مسح الخطأ هنا
     notifyListeners();
 
     try {
       final nextPage = _currentPage + 1;
       final paginatedResponse = await _apiService.fetchArticles(page: nextPage);
-      // print('Fetched more public articles response: $paginatedResponse'); // Debug print
-
-      // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة
       _articles.addAll(paginatedResponse.data ?? []);
-
-
       _currentPage = paginatedResponse.currentPage ?? _currentPage;
-      _lastPage = paginatedResponse.lastPage;
-
-    } on ApiException catch (e) {
-      print('API Exception during fetchMorePublicArticles: ${e.message}');
+      _hasMorePages = paginatedResponse.nextPageUrl != null;
     } catch (e) {
-      print('Unexpected error during fetchMorePublicArticles: ${e.toString()}');
+      // Optionally set an error, but might be disruptive for infinite scroll
+      print("Failed to fetch more articles: $e");
     } finally {
       _isFetchingMore = false;
       notifyListeners();
     }
   }
 
-  // جلب تفاصيل مقال محدد
-  Future<Article?> fetchArticle(int articleId) async {
-    // حاول إيجاد المقال في القائمة المحملة حالياً أولاً
-    final existingArticle = _articles.firstWhereOrNull((article) => article.articleId == articleId);
-    if (existingArticle != null) {
-      return existingArticle;
-    }
-
-    // إذا لم يوجد في القائمة، اذهب لجلبه من الـ API العام
-    // لا نغير حالة التحميل الرئيسية هنا لعدم التأثير على عرض القائمة الرئيسية
-    // bool _isFetchingSingleArticle = false; // تعريف حالة تحميل فردية إذا لزم الأمر
-
+  Future<Article> fetchArticleDetails(int articleId) async {
     try {
-      // هذا المسار عام لا يتطلب توكن
-      final article = await _apiService.fetchArticle(articleId);
-      // لا تضيفه للقائمة هنا لتجنب تكرار العناصر في القائمة الرئيسية المصفحة
-      return article;
-    } on ApiException catch (e) {
-      print('API Exception during fetchSinglePublicArticle: ${e.message}');
-      _error = e.message; // يمكن تعيين الخطأ العام هنا إذا فشل جلب التفاصيل
-      return null; // أعد null للإشارة إلى الفشل
+      return await _apiService.fetchArticle(articleId);
     } catch (e) {
-      print('Unexpected error during fetchSinglePublicArticle: ${e.toString()}');
-      _error = 'Failed to load article details: ${e.toString()}';
-      return null; // أعد null للإشارة إلى الفشل
-    } finally {
-      // يمكن تحديث حالة تحميل العنصر الفردي هنا
-      // setState(() { _isFetchingSingleArticle = false; }); notifyListeners();
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
     }
-  }
-}
-
-// Simple extension to mimic firstWhereOrNull if not using collection package
-extension ListArticleExtension on List<Article> {
-  Article? firstWhereOrNull(bool Function(Article) test) {
-    for (var element in this) {
-      if (test(element)) return element;
-    }
-    return null;
   }
 }

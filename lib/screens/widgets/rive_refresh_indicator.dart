@@ -20,85 +20,41 @@ class RiveRefreshIndicator extends StatefulWidget {
 }
 
 class _RiveRefreshIndicatorState extends State<RiveRefreshIndicator> {
-  // --- Rive State Machine and Inputs ---
-  SMIInput<double>? _pullInput; // سيتحكم في مدى سحب اليد
-  SMIInput<bool>? _isSearchingInput; // سيقوم بتشغيل/إيقاف حركة البحث
-  Artboard? _riveArtboard;
-
-  @override
-  void initState() {
-    super.initState();
-    // تحميل ملف Rive
-    rootBundle.load('assets/rive/search_hand.riv').then(
-          (data) async {
-        try {
-          final file = RiveFile.import(data);
-          final artboard = file.mainArtboard;
-          // اسم الـ State Machine يجب أن يطابق الاسم في محرر Rive
-          var controller = StateMachineController.fromArtboard(artboard, 'Searching');
-          if (controller != null) {
-            artboard.addController(controller);
-            // أسماء الـ Inputs يجب أن تطابق الأسماء في محرر Rive
-            _pullInput = controller.findInput<double>('pull');
-            _isSearchingInput = controller.findInput<bool>('isSearching');
-          }
-          setState(() => _riveArtboard = artboard);
-        } catch (e) {
-          print("Error loading Rive file: $e");
-        }
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return CustomRefreshIndicator(
       onRefresh: widget.onRefresh,
-      // المسافة التي يجب سحبها لتشغيل onRefresh
-      offsetToArmed: 150,
+      offsetToArmed: 100,
       builder: (BuildContext context, Widget child, IndicatorController controller) {
-        // الاستماع لتغيرات حالة السحب
-        controller.addListener(() {
-          // قيمة السحب تتراوح من 0.0 إلى 1.0
-          // نضربها في 100 لتناسب الـ input في Rive (الذي عادة ما يكون من 0 إلى 100)
-          _pullInput?.value = controller.value * 100;
-
-          // تشغيل وإيقاف حركة البحث بناءً على حالة الـ Indicator
-          if (controller.isArmed || controller.isLoading) {
-            _isSearchingInput?.value = true;
-          } else {
-            _isSearchingInput?.value = false;
-          }
-        });
-
         return Stack(
           children: [
-            // عرض حركة Rive في الأعلى
             AnimatedBuilder(
               animation: controller,
               builder: (context, _) {
                 return Align(
                   alignment: Alignment.topCenter,
-                  child: SizedBox(
-                    height: 150,
-                    // تغيير شفافية الحركة أثناء السحب
+                  child: Container(
+                    height: 100,
+                    margin: const EdgeInsets.only(top: 20),
                     child: Opacity(
                       opacity: controller.value.clamp(0.0, 1.0),
-                      child: _riveArtboard == null
-                          ? const SizedBox()
-                          : Rive(artboard: _riveArtboard!),
+                      child: controller.isLoading
+                          ? const CircularProgressIndicator()
+                          : Icon(
+                              Icons.arrow_downward,
+                              color: Theme.of(context).primaryColor,
+                              size: 30 * controller.value,
+                            ),
                     ),
                   ),
                 );
               },
             ),
-            // عرض المحتوى الرئيسي (القائمة)
             AnimatedBuilder(
               animation: controller,
               builder: (context, _) {
-                // تحريك القائمة للأسفل مع حركة السحب
                 return Transform.translate(
-                  offset: Offset(0.0, controller.value * 150),
+                  offset: Offset(0.0, controller.value * 100),
                   child: child,
                 );
               },

@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../../../models/article.dart';
 import '../../../providers/admin_article_provider.dart';
 import '../../../services/api_service.dart'; // لاستخدام ApiException
+import '../../../widgets/rive_loading_indicator.dart';
 
 class AdminCreateEditArticleScreen extends StatefulWidget {
   final Article? article; // إذا كانت غير null، فنحن في وضع التعديل
@@ -159,7 +160,7 @@ class _AdminCreateEditArticleScreenState extends State<AdminCreateEditArticleScr
           // زر الحفظ
           IconButton(
             icon: _isSaving
-                ? const CircularProgressIndicator(color: Colors.white) // عرض مؤشر تحميل عند الحفظ
+                ? const RiveLoadingIndicator(size: 24) // عرض مؤشر تحميل عند الحفظ
                 : const Icon(Icons.save),
             tooltip: 'حفظ',
             onPressed: _isSaving ? null : () => _saveArticle(context), // تعطيل الزر أثناء الحفظ

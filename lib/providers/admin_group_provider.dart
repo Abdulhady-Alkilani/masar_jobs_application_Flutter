@@ -30,7 +30,7 @@ class AdminGroupProvider extends ChangeNotifier {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
-      _groups = await _apiService.fetchAllGroupsAdmin(token!);
+              _groups = await _apiService.fetchAllGroupsAdmin(token);
       // يمكنك ترتيب القائمة هنا إذا أردت
       // _groups.sort((a, b) => a.telegramHyperLink!.compareTo(b.telegramHyperLink!));
 

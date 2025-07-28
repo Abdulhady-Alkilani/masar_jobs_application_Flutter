@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/managed_company_provider.dart';
 import '../../services/api_service.dart';
+import '../../widgets/rive_loading_indicator.dart';
 
 class EditCompanyScreen extends StatefulWidget {
   const EditCompanyScreen({super.key});
@@ -77,7 +78,7 @@ class _EditCompanyScreenState extends State<EditCompanyScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _saveCompany,
         label: const Text('حفظ التغييرات'),
-        icon: provider.isLoading ? const CircularProgressIndicator(color: Colors.white) : const Icon(Icons.save_alt_rounded),
+        icon: provider.isLoading ? const RiveLoadingIndicator(size: 24) : const Icon(Icons.save_alt_rounded),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),

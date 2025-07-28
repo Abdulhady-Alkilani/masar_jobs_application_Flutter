@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 
 // استيراد شاشات الأدوار المختلفة
+import 'public/guest_home_screen.dart';
 import 'consultant/consultant_home_screen.dart';
 import 'home_screen.dart';
 import 'admin/admin_panel_screen.dart';
@@ -59,7 +60,7 @@ class _WrapperScreenState extends State<WrapperScreen> {
           return const HomeScreen();
       }
     } else {
-      return const LoginScreen();
+      return const GuestHomeScreen();
     }
   }
 }

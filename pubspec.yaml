@@ -21,7 +21,6 @@ dependencies:
 
   # UI & Animation
   cupertino_icons: ^1.0.8
-  google_fonts: ^6.2.1
   flutter_animate: ^4.5.0
   shimmer: ^3.0.0
   cached_network_image: ^3.3.1
@@ -37,22 +36,32 @@ dependencies:
   file_picker: ^8.0.5   # لاختيار أي نوع من الملفات (مثل PDF)
   sensors_plus: ^5.0.1  # للاستجابة لحركة الهاتف
   just_audio: ^0.9.36
-
-
-
+  flutter_pdfview: ^1.4.1+1
+  path_provider: ^2.1.5
+  flutter_launcher_icons: ^0.14.4
+  google_generative_ai: ^0.4.7
+  flutter_dotenv: ^5.2.1
+  transparent_image: ^2.0.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  image: ^4.2.0
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/image/logo.png"
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true
 
   assets:
-     #- assets/videos/
-    # - assets/images/
-     - assets/rive/
+    - .env
+    - assets/rive/
+    - assets/image/
 
   # fonts:
   #   - family: Cairo

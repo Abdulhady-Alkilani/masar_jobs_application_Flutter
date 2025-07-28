@@ -1,1 +1,1 @@
-\"feat: Apply massive changes across the application\" 
+\"docs: Update instruction file and add commit message\" 

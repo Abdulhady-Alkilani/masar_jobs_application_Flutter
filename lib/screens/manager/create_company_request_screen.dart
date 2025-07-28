@@ -1,11 +1,13 @@
 // lib/screens/manager/create_company_request_screen.dart
 
 import 'package:flutter/material.dart';
+import 'dart:io'; // Added for File
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../providers/managed_company_provider.dart';
 import '../../services/api_service.dart';
+import '../../widgets/rive_loading_indicator.dart';
 
 class CreateCompanyRequestScreen extends StatefulWidget {
   const CreateCompanyRequestScreen({super.key});
@@ -49,7 +51,7 @@ class _CreateCompanyRequestScreenState extends State<CreateCompanyRequestScreen>
 
     try {
       // استدعاء دالة إنشاء الشركة في الـ Provider
-      await provider.createManagedCompany(context, _companyData);
+      await provider.requestCompanyCreationAsManager(context, fields: _companyData);
 
       // في حالة النجاح
       if (mounted) {
@@ -88,7 +90,7 @@ class _CreateCompanyRequestScreenState extends State<CreateCompanyRequestScreen>
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
         child: provider.isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: RiveLoadingIndicator())
             : ElevatedButton.icon(
           onPressed: _submitRequest,
           icon: const Icon(Icons.send_rounded),

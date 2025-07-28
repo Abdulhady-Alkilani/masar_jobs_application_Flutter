@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../providers/managed_company_provider.dart';
 import 'edit_company_screen.dart'; // شاشة تعديل الشركة
 import 'create_company_request_screen.dart'; // شاشة إنشاء طلب
+import '../../widgets/rive_loading_indicator.dart';
 
 class ManagedCompanyDashboardScreen extends StatefulWidget {
   const ManagedCompanyDashboardScreen({super.key});
@@ -31,7 +32,7 @@ class _ManagedCompanyDashboardScreenState extends State<ManagedCompanyDashboardS
       body: Consumer<ManagedCompanyProvider>(
         builder: (context, companyProvider, child) {
           if (companyProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
 
           if (companyProvider.error != null) {

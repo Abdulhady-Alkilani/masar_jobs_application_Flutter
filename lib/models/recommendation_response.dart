@@ -24,7 +24,7 @@ class RecommendationResponse {
     }
 
     return RecommendationResponse(
-      jobOpportunities: _parseList<JobOpportunity>('job_opportunities', (json) => JobOpportunity.fromJson(json)),
+      jobOpportunities: _parseList<JobOpportunity>('recommended_jobs', (json) => JobOpportunity.fromJson(json)),
       trainingCourses: _parseList<TrainingCourse>('training_courses', (json) => TrainingCourse.fromJson(json)), // <--- وهنا أيضاً
     );
   }

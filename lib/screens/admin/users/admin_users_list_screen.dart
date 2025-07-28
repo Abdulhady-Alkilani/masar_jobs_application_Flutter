@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../providers/admin_user_provider.dart';
 import '../../../../models/user.dart';
 import 'admin_create_edit_user_screen.dart';
+import '../../../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 
 class AdminUsersListScreen extends StatefulWidget {
   const AdminUsersListScreen({super.key});
@@ -61,7 +62,7 @@ class _AdminUsersListScreenState extends State<AdminUsersListScreen> {
       body: Consumer<AdminUserProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.users.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
           if (provider.error != null && provider.users.isEmpty) {
             return Center(child: Text('خطأ: ${provider.error}'));
@@ -74,7 +75,7 @@ class _AdminUsersListScreenState extends State<AdminUsersListScreen> {
               itemCount: provider.users.length + (provider.isFetchingMore ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == provider.users.length) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: RiveLoadingIndicator());
                 }
                 final user = provider.users[index];
                 return _buildUserTile(user, provider);

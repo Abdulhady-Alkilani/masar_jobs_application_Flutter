@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../providers/job_applicants_provider.dart';
 import '../../models/applicant.dart';
 import '../../services/api_service.dart';
+import '../../widgets/rive_loading_indicator.dart';
 
 class JobApplicantsScreen extends StatefulWidget {
   final int jobId;
@@ -58,7 +59,7 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
       body: Consumer<JobApplicantsProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
           if (provider.error != null) {
             return Center(child: Text('خطأ: ${provider.error}'));

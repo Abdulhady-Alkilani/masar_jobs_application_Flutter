@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/job_opportunity.dart';
-import '../models/paginated_response.dart';
 import '../services/api_service.dart';
-import '../providers/auth_provider.dart';
+import 'auth_provider.dart';
 import 'package:provider/provider.dart';
 
 
@@ -42,7 +41,7 @@ class ManagedJobOpportunityProvider extends ChangeNotifier {
       //    throw ApiException(403, 'User not authorized to manage jobs.');
       // }
 
-      final paginatedResponse = await _apiService.fetchManagedJobs(token!, page: 1);
+      final paginatedResponse = await _apiService.fetchManagedJobs(token, page: 1);
       // print('Fetched initial managed jobs response: $paginatedResponse'); // Debug print
 
       // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة

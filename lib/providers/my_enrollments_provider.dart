@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/enrollment.dart';
-import '../models/training_course.dart'; // Needed for enroll method
 import '../services/api_service.dart';
-import '../providers/auth_provider.dart';
+import 'auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class MyEnrollmentsProvider extends ChangeNotifier {

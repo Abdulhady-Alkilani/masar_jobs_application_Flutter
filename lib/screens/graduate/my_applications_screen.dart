@@ -7,6 +7,7 @@ import '../../providers/my_applications_provider.dart';
 import '../../models/job_application.dart';
 import '../../services/api_service.dart';
 import '../widgets/empty_state_widget.dart'; // استيراد ويدجت الحالة الفارغة
+import '../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 
 class MyApplicationsScreen extends StatefulWidget {
   const MyApplicationsScreen({super.key});
@@ -24,7 +25,29 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
   }
 
   Future<void> _deleteApplication(int applicationId, MyApplicationsProvider provider) async {
-    // ... منطق الحذف
+    try {
+      await provider.deleteApplication(context, applicationId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم سحب الطلب بنجاح!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } on ApiException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('فشل سحب الطلب: ${e.message}'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('حدث خطأ غير متوقع: ${e.toString()}'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -34,7 +57,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
       body: Consumer<MyApplicationsProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.applications.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
           if (provider.error != null) {
             return EmptyStateWidget(
@@ -73,7 +96,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
 
   Widget _buildApplicationCard(JobApplication application, MyApplicationsProvider provider) {
     final theme = Theme.of(context);
-    // ... تصميم البطاقة هنا يمكن أن يكون مثل JobCard الذي صممناه
+    // ... تصميم ال��طاقة هنا يمكن أن يكون مثل JobCard الذي صممناه
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

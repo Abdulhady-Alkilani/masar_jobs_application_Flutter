@@ -6,6 +6,7 @@ import '../../../providers/admin_job_provider.dart';
 import '../../../models/job_opportunity.dart';
 import 'admin_create_edit_job_screen.dart'; // سننشئه لاحقًا
 import '../../../services/api_service.dart';
+import '../../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 
 class AdminJobsListScreen extends StatefulWidget {
   const AdminJobsListScreen({super.key});
@@ -79,7 +80,7 @@ class _AdminJobsListScreenState extends State<AdminJobsListScreen> {
       body: Consumer<AdminJobProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.jobs.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
           if (provider.error != null && provider.jobs.isEmpty) {
             return Center(child: Text('حدث خطأ: ${provider.error}'));
@@ -95,7 +96,7 @@ class _AdminJobsListScreenState extends State<AdminJobsListScreen> {
               itemCount: provider.jobs.length + (provider.isFetchingMore ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == provider.jobs.length) {
-                  return const Padding(padding: EdgeInsets.all(16.0), child: Center(child: CircularProgressIndicator()));
+                  return const Padding(padding: EdgeInsets.all(16.0), child: Center(child: RiveLoadingIndicator()));
                 }
                 final job = provider.jobs[index];
                 return _buildJobCard(job, provider);

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'edit_manager_profile_screen.dart'; // سننشئ هذه الشاشة تالياً
+import '../../widgets/rive_loading_indicator.dart';
 
 class ManagerProfileScreen extends StatelessWidget {
   const ManagerProfileScreen({super.key});
@@ -16,7 +17,7 @@ class ManagerProfileScreen extends StatelessWidget {
         final user = authProvider.user;
 
         if (authProvider.isLoading && user == null) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(body: Center(child: RiveLoadingIndicator()));
         }
 
         if (user == null) {

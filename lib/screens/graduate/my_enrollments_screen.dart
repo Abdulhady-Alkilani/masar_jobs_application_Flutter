@@ -9,6 +9,7 @@ import '../../providers/my_enrollments_provider.dart';
 import '../../models/enrollment.dart';
 import '../../services/api_service.dart';
 import '../widgets/empty_state_widget.dart';
+import '../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 
 class MyEnrollmentsScreen extends StatefulWidget {
   const MyEnrollmentsScreen({super.key});
@@ -66,12 +67,12 @@ class _MyEnrollmentsScreenState extends State<MyEnrollmentsScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('دوراتي المسجلة'),
+        title: const Text('دوراتي المسج��ة'),
       ),
       body: Consumer<MyEnrollmentsProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.enrollments.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
           if (provider.error != null) {
             return EmptyStateWidget(

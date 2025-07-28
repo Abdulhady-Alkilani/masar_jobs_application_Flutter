@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart'; // لتنسيق التاريخ
 import '../../../providers/admin_course_provider.dart';
 import '../../../models/training_course.dart';
+import '../../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 // TODO: قم باستيراد شاشة تفاصيل الدورة للأدمن وشاشة إضافة/تعديل الدورة
 // import 'admin_course_details_screen.dart';
 // import 'admin_create_edit_course_screen.dart';
@@ -35,7 +36,7 @@ class _AdminCoursesListScreenState extends State<AdminCoursesListScreen> {
     _scrollController.addListener(() {
       // تحقق مما إذا كان المستخدم قد وصل إلى نهاية القائمة تقريباً
       if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.95) {
-        // تحقق مما إذا كان هناك المزيد من الصفحات للجلب وأننا لا نجلب حالياً
+        // تحقق مما إ��ا كان هناك المزيد من الصفحات للجلب وأننا لا نجلب حالياً
         if (provider.hasMorePages && !provider.isFetchingMore) {
           provider.fetchMoreCourses(context);
         }
@@ -60,7 +61,7 @@ class _AdminCoursesListScreenState extends State<AdminCoursesListScreen> {
         builder: (context, provider, child) {
           // عرض مؤشر تحميل إذا كانت القائمة فارغة ويتم تحميلها لأول مرة
           if (provider.isLoading && provider.courses.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
 
           // عرض رسالة خطأ إذا حدث خطأ والقائمة فارغة
@@ -84,7 +85,7 @@ class _AdminCoursesListScreenState extends State<AdminCoursesListScreen> {
                 if (index == provider.courses.length) {
                   return const Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: Center(child: CircularProgressIndicator()),
+                    child: Center(child: RiveLoadingIndicator()),
                   );
                 }
 

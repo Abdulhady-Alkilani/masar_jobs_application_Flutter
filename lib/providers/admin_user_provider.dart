@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:masar_jobs/models/user.dart';
+import 'package:masar_jobs/providers/auth_provider.dart';
+import 'package:masar_jobs/services/api_service.dart';
 import 'package:provider/provider.dart';
-import '../models/user.dart'; // تأكد من المسار
-import '../models/paginated_response.dart'; // تأكد من المسار
-import '../services/api_service.dart'; // تأكد من المسار
-import '../providers/auth_provider.dart'; // تأكد من المسار
-
 
 class AdminUserProvider extends ChangeNotifier {
   List<User> _users = [];
@@ -47,17 +45,32 @@ class AdminUserProvider extends ChangeNotifier {
 
 
   // جلب جميع المستخدمين (للأدمن) - الصفحة الأولى
-  // في AdminUserProvider
   Future<void> fetchAllUsers(BuildContext context) async {
-    // ...
-    final token = Provider.of<AuthProvider>(context, listen: false).token;
-    print("AdminUserProvider: Fetching users with token: $token"); // <-- أضف هذا
-    if (token == null) {
-      _error = 'Token is null, cannot fetch users.';
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final token = Provider.of<AuthProvider>(context, listen: false).token;
+      if (token == null) throw ApiException(401, 'User not authenticated.');
+
+      final paginatedResponse = await _apiService.fetchAllUsers(token, page: 1);
+
+      _users = _convertDynamicListToUserList(paginatedResponse.data);
+
+      _currentPage = paginatedResponse.currentPage ?? 1;
+      _lastPage = paginatedResponse.lastPage;
+
+    } on ApiException catch (e) {
+      _error = e.message;
+      print('API Exception during fetchAllUsers: ${e.toString()}');
+    } catch (e) {
+      _error = 'Failed to load users: ${e.toString()}';
+      print('Unexpected error during fetchAllUsers: ${e.toString()}');
+    } finally {
+      _isLoading = false;
       notifyListeners();
-      return;
     }
-    // ...
   }
 
   // جلب الصفحات التالية من المستخدمين

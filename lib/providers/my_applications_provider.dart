@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/job_application.dart';
-import '../models/job_opportunity.dart'; // Needed for apply method
 import '../services/api_service.dart';
-import '../providers/auth_provider.dart'; // Needed to get the token
+import 'auth_provider.dart'; // Needed to get the token
 import 'package:provider/provider.dart'; // Needed to access AuthProvider
 
 class MyApplicationsProvider extends ChangeNotifier {

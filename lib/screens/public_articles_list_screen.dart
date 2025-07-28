@@ -1,14 +1,18 @@
 // lib/screens/public_articles_list_screen.dart
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:masar_jobs/screens/public/public_article_details_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart'; // لتنسيق التاريخ
-import '../../providers/public_article_provider.dart';
-import '../../models/article.dart';
-// import 'article_details_screen.dart'; // شاشة لعرض تفاصيل المقال (سنحتاج لإنشائها)
+import '../providers/public_article_provider.dart';
+import '../models/article.dart';
+import 'widgets/empty_state_widget.dart';
 
 class PublicArticlesListScreen extends StatefulWidget {
-  const PublicArticlesListScreen({super.key});
+  final bool isGuest;
+  const PublicArticlesListScreen({super.key, this.isGuest = false});
 
   @override
   State<PublicArticlesListScreen> createState() => _PublicArticlesListScreenState();
@@ -22,13 +26,10 @@ class _PublicArticlesListScreenState extends State<PublicArticlesListScreen> {
     super.initState();
     final provider = Provider.of<PublicArticleProvider>(context, listen: false);
 
-    // جلب الصفحة الأولى
-    // تأكد من أن القائمة فارغة قبل الجلب لتجنب تراكم البيانات عند العودة للشاشة
     if (provider.articles.isEmpty) {
       provider.fetchArticles();
     }
 
-    // مستمع للتمرير لجلب المزيد
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
         if (provider.hasMorePages && !provider.isFetchingMore) {
@@ -50,6 +51,7 @@ class _PublicArticlesListScreenState extends State<PublicArticlesListScreen> {
       appBar: AppBar(
         title: const Text('المقالات والأخبار'),
       ),
+      backgroundColor: Colors.grey.shade100,
       body: Consumer<PublicArticleProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.articles.isEmpty) {
@@ -57,17 +59,28 @@ class _PublicArticlesListScreenState extends State<PublicArticlesListScreen> {
           }
 
           if (provider.error != null && provider.articles.isEmpty) {
-            return Center(child: Text('حدث خطأ: ${provider.error}'));
+            return EmptyStateWidget(
+              icon: Icons.cloud_off_rounded,
+              title: 'حدث خطأ',
+              message: 'لم نتمكن من جلب المقالات. حاول تحديث الصفحة.',
+              onRefresh: () => provider.fetchArticles(),
+            );
           }
 
           if (provider.articles.isEmpty) {
-            return const Center(child: Text('لا توجد مقالات متاحة حالياً.'));
+            return EmptyStateWidget(
+              icon: Icons.article_outlined,
+              title: 'لا توجد مقالات',
+              message: 'لم يتم نشر أي مقالات بعد. تحقق مرة ��خرى قريبًا!',
+              onRefresh: () => provider.fetchArticles(),
+            );
           }
 
           return RefreshIndicator(
             onRefresh: () => provider.fetchArticles(),
             child: ListView.builder(
               controller: _scrollController,
+              padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: provider.articles.length + (provider.isFetchingMore ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == provider.articles.length) {
@@ -77,7 +90,10 @@ class _PublicArticlesListScreenState extends State<PublicArticlesListScreen> {
                   );
                 }
                 final article = provider.articles[index];
-                return _buildArticleCard(context, article);
+                return _buildArticleCard(context, article)
+                    .animate()
+                    .fadeIn(duration: 400.ms, delay: (100 * (index % 5)).ms)
+                    .slideY(begin: 0.3, curve: Curves.easeOut);
               },
             ),
           );
@@ -87,83 +103,122 @@ class _PublicArticlesListScreenState extends State<PublicArticlesListScreen> {
   }
 
   Widget _buildArticleCard(BuildContext context, Article article) {
-    // !!! استبدل هذا الرابط بعنوان موقعك الأساسي !!!
-    const String baseUrl = 'https://powderblue-woodpecker-887296.hostingersite.com';
-    final imageUrl = (article.articlePhoto != null && article.articlePhoto!.isNotEmpty)
-        ? baseUrl + article.articlePhoto!
-        : null;
+    final theme = Theme.of(context);
+    final imageUrl = article.articlePhoto;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      elevation: 3,
-      clipBehavior: Clip.antiAlias, // لقص الصورة لتناسب زوايا البطاقة
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      elevation: 2,
+      shadowColor: Colors.black.withOpacity(0.1),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          // TODO: الانتقال إلى شاشة تفاصيل المقال
-          // Navigator.push(context, MaterialPageRoute(builder: (context) => ArticleDetailsScreen(article: article)));
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ArticleDetailsScreen(article: article),
+            ),
+          );
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // صورة المقال
-            if (imageUrl != null)
-              Image.network(
-                imageUrl,
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                const Center(child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey)),
-              ),
-
-            // محتوى البطاقة
+            // --- Card Header ---
             Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
                 children: [
-                  Text(
-                    article.title ?? 'بدون عنوان',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  CircleAvatar(
+                    backgroundColor: theme.primaryColor.withOpacity(0.1),
+                    child: Text(
+                      article.user?.firstName?.substring(0, 1) ?? 'A',
+                      style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.bold),
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    article.description ?? '',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const Divider(height: 24),
-                  Row(
-                    children: [
-                      // كاتب المقال
-                      if (article.user != null) ...[
-                        CircleAvatar(
-                          radius: 15,
-                          // backgroundImage: NetworkImage(...) إذا كان للمستخدم صورة
-                          child: Text(article.user!.firstName?.substring(0,1) ?? '?'),
-                        ),
-                        const SizedBox(width: 8),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          '${article.user!.firstName} ${article.user!.lastName}',
-                          style: const TextStyle(fontWeight: FontWeight.w500),
+                          '${article.user?.firstName ?? 'خبير'} ${article.user?.lastName ?? ''}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
+                        if (article.date != null)
+                          Text(
+                            DateFormat.yMMMd('ar').add_jm().format(article.date!),
+                            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+                          ),
                       ],
-                      const Spacer(),
-                      // تاريخ النشر
-                      if (article.date != null)
-                        Text(
-                          DateFormat.yMMMd('ar').format(article.date!), // تنسيق عربي للتاريخ
-                          style: const TextStyle(color: Colors.grey),
-                        ),
-                    ],
-                  )
+                    ),
+                  ),
                 ],
               ),
             ),
+            // --- Card Image ---
+            if (imageUrl != null)
+              Hero(
+                tag: 'article_image_${article.articleId}',
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  height: 220,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    height: 220,
+                    color: Colors.grey.shade200,
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    height: 220,
+                    color: Colors.grey.shade200,
+                    child: const Center(child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey)),
+                  ),
+                ),
+              ),
+            // --- Card Content ---
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Text(
+                article.title ?? 'بدون عنوان',
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.black87),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (article.description != null && article.description!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 8.0),
+                child: Text(
+                  article.description!,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade800, height: 1.5),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            // --- Card Footer ---
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ArticleDetailsScreen(article: article),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.read_more_outlined),
+                    label: const Text('قراءة المزيد'),
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),

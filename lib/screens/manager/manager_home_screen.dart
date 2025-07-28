@@ -4,7 +4,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 // --- استيراد الملفات اللازمة ---
 import '../../models/company.dart';
@@ -16,6 +15,7 @@ import 'create_company_request_screen.dart';
 import 'edit_company_screen.dart';
 import 'managed_jobs_list_screen.dart';
 import 'managed_courses_list_screen.dart';
+import '../../widgets/rive_loading_indicator.dart';
 
 const Color neumorphicBackgroundColor = Color(0xFFF5F6FA);
 
@@ -72,7 +72,7 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
   }
 
   Widget _buildBody(BuildContext context, ManagedCompanyProvider provider) {
-    if (provider.isLoading) return const Center(child: CircularProgressIndicator());
+    if (provider.isLoading) return const Center(child: RiveLoadingIndicator());
     if (provider.hasCompany) return _DashboardView(company: provider.company!);
     return const _RequestCompanyView();
   }
@@ -99,7 +99,7 @@ class _DashboardView extends StatelessWidget {
             children: [
               Text(
                 company.name ?? 'شركتك',
-                style: GoogleFonts.cairo(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.black87),
               ),
               const SizedBox(height: 4),
               Text(
@@ -311,8 +311,8 @@ class _ManagerDrawer extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
             decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.2),
-              border: Border(left: BorderSide(color: theme.colorScheme.secondary.withOpacity(0.5))),
+              color: Colors.white.withOpacity(0.7),
+              border: Border(left: BorderSide(color: Colors.grey.withOpacity(0.2))),
             ),
             child: Column(
               children: [
@@ -334,7 +334,7 @@ class _ManagerDrawer extends StatelessWidget {
                     ].animate(interval: 100.ms).fadeIn(duration: 400.ms).slideX(begin: 0.5),
                   ),
                 ),
-                const Divider(color: Colors.white24, indent: 20, endIndent: 20),
+                const Divider(color: Colors.black26, indent: 20, endIndent: 20),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: _MenuItem(
@@ -368,8 +368,8 @@ class _ManagerDrawer extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text('${user?.firstName} ${user?.lastName}', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-          Text(user?.email ?? '', style: const TextStyle(color: Colors.white70, fontSize: 14)),
+          Text('${user?.firstName} ${user?.lastName}', style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 20, fontWeight: FontWeight.bold)),
+          Text(user?.email ?? '', style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7), fontSize: 14)),
         ],
       ),
     ).animate().fadeIn(duration: 800.ms).slideY(begin: -0.3);
@@ -396,7 +396,7 @@ class __MenuItemState extends State<_MenuItem> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = widget.isLogout ? Colors.red.shade400 : Colors.white;
+    final color = widget.isLogout ? Colors.red.shade400 : theme.colorScheme.onSurface;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -412,8 +412,8 @@ class __MenuItemState extends State<_MenuItem> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: _isHovered ? Colors.white.withOpacity(0.15) : Colors.transparent,
-            boxShadow: _isHovered ? [BoxShadow(color: theme.colorScheme.secondary.withOpacity(0.5), blurRadius: 20, spreadRadius: -5)] : [],
+            color: _isHovered ? theme.primaryColor.withOpacity(0.1) : Colors.transparent,
+            boxShadow: _isHovered ? [BoxShadow(color: theme.primaryColor.withOpacity(0.3), blurRadius: 20, spreadRadius: -5)] : [],
           ),
           child: Row(
             children: [

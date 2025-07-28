@@ -5,7 +5,10 @@ import 'package:provider/provider.dart';
 import '../../providers/recommendation_provider.dart';
 import '../../models/job_opportunity.dart';
 import '../../models/training_course.dart';
-import '../widgets/empty_state_widget.dart';
+import '../public/job_detail_screen.dart';
+import '../public/course_detail_screen.dart';
+import '../../widgets/rive_loading_indicator.dart';
+import '../widgets/empty_state_widget.dart'; // Import RiveLoadingIndicator
 
 class RecommendationsScreen extends StatefulWidget {
   const RecommendationsScreen({super.key});
@@ -31,7 +34,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
         builder: (context, provider, child) {
           // --- الحالة 1: التحميل ---
           if (provider.isLoading && provider.recommendations == null) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
 
           // --- الحالة 2: وجود خطأ ---
@@ -47,7 +50,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
           // --- الحالة 3: لا توجد بيانات (فارغة) ---
           if (provider.recommendations == null ||
               (provider.recommendations!.jobOpportunities!.isEmpty &&
-                  provider.recommendations!.trainingCourses!.isEmpty)) {
+                  provider.recommendations!.trainingCourses.isEmpty)) {
             return EmptyStateWidget(
               icon: Icons.auto_awesome,
               title: 'لا توجد توصيات لك بعد',
@@ -118,7 +121,12 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
         subtitle: Text(job.user?.firstName ?? 'شركة غير معروفة'),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: () {
-          // TODO: الانتقال إلى صفحة تفاصيل الوظيفة
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => JobDetailScreen(job: job),
+            ),
+          );
         },
       ),
     );
@@ -129,12 +137,17 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: CircleAvatar(child: Icon(Icons.school_outlined)),
+        leading: const CircleAvatar(child: Icon(Icons.school_outlined)),
         title: Text(course.courseName ?? 'دورة غير محددة', style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text('المدرب: ${course.trainersName ?? 'غير معروف'}'),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: () {
-          // TODO: الانتقال إلى صفحة تفاصيل الدورة
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CourseDetailScreen(course: course),
+            ),
+          );
         },
       ),
     );

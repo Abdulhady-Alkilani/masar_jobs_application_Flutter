@@ -9,7 +9,7 @@ import '../../../providers/auth_provider.dart';
 import '../../../models/user.dart';
 
 // استيراد الشاشات
-import '../../manager/manager_home_screen.dart';
+import '../../manager/managed_courses_list_screen.dart';
 import '../../user_profile_screen.dart';
 import '../articles/managed_articles_list_screen.dart';
 
@@ -24,7 +24,7 @@ class ConsultantNavDrawer extends StatelessWidget {
     final drawerItems = [
       {'icon': Icons.person_search_outlined, 'title': 'ملفي الشخصي', 'route': () => const UserProfileScreen()},
       {'icon': Icons.edit_note_rounded, 'title': 'مقالاتي', 'route': () => const ManagedArticlesListScreen()},
-      {'icon': Icons.video_library_outlined, 'title': 'دوراتي', 'route': () => const ManagerHomeScreen()},
+      {'icon': Icons.video_library_outlined, 'title': 'دوراتي', 'route': () => const ManagedCoursesListScreen()},
     ];
 
     return Drawer(

@@ -11,6 +11,7 @@ import '../../providers/public_training_course_provider.dart';
 import '../../services/api_service.dart';
 import '../../providers/auth_provider.dart';
 import '../widgets/empty_state_widget.dart';
+import '../../widgets/rive_loading_indicator.dart';
 
 class PublicCourseDetailsScreen extends StatefulWidget {
   final int courseId;
@@ -29,7 +30,6 @@ class _PublicCourseDetailsScreenState extends State<PublicCourseDetailsScreen> {
     _courseFuture = Provider.of<PublicTrainingCourseProvider>(context, listen: false).fetchTrainingCourse(widget.courseId);
   }
 
-  // دالة التسجيل في الدورة
   void _enrollInCourse(TrainingCourse course) async {
     final myEnrollmentsProvider = Provider.of<MyEnrollmentsProvider>(context, listen: false);
     try {
@@ -52,18 +52,18 @@ class _PublicCourseDetailsScreenState extends State<PublicCourseDetailsScreen> {
     final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFFE0F7FA),
       body: FutureBuilder<TrainingCourse?>(
         future: _courseFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
           if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
             return EmptyStateWidget(
               icon: Icons.error_outline_rounded,
               title: 'خطأ',
-              message: 'تعذر تحميل تفاصيل الدورة. يرجى المحاولة مرة أخرى.',
+              message: 'تعذر ��حميل تفاصيل الدورة. يرجى المحاولة مرة أخرى.',
               onRefresh: () {
                 setState(() {
                   _courseFuture = Provider.of<PublicTrainingCourseProvider>(context, listen: false).fetchTrainingCourse(widget.courseId);
@@ -73,57 +73,60 @@ class _PublicCourseDetailsScreenState extends State<PublicCourseDetailsScreen> {
           }
 
           final course = snapshot.data!;
+          final bool isCourseEnded = course.endDate != null && course.endDate!.isBefore(DateTime.now());
 
           return CustomScrollView(
             slivers: [
-              // 1. الشريط العلوي (Header)
               SliverAppBar(
                 expandedHeight: 250.0,
                 pinned: true,
                 stretch: true,
-                backgroundColor: theme.primaryColor,
-                iconTheme: const IconThemeData(color: Colors.white),
+                backgroundColor: Colors.white, // AppBar background white
+                iconTheme: IconThemeData(color: theme.primaryColor), // Icons in primary color
                 flexibleSpace: FlexibleSpaceBar(
                   centerTitle: true,
                   titlePadding: const EdgeInsets.symmetric(horizontal: 48, vertical: 12),
                   title: Text(
                     course.courseName ?? 'تفاصيل الدورة',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                    style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.bold, fontSize: 18, shadows: [Shadow(blurRadius: 4, color: Colors.black.withOpacity(0.3))]),
                     textAlign: TextAlign.center,
                   ),
                   background: Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [theme.primaryColor, theme.colorScheme.secondary],
+                        colors: [Colors.white, Color(0xFFE0F7FA)], // White to light sky blue gradient
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                     ),
-                    child: const Icon(Icons.school_outlined, color: Colors.white24, size: 150),
+                    child: Icon(Icons.school_outlined, color: theme.primaryColor.withOpacity(0.2), size: 150),
                   ),
                 ),
               ),
-
-              // 2. محتوى الصفحة
               SliverList(
                 delegate: SliverChildListDelegate([
                   Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildInfoCard(theme, course).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
-                        _buildSection(theme, 'وصف الدورة', course.description, isDescription: true).animate().fadeIn(delay: 300.ms),
-                        _buildSkillsSection(theme, 'المهارات المكتسبة', course.skills).animate().fadeIn(delay: 400.ms).slideX(begin: -0.2),
+                        const SizedBox(height: 16),
+                        _buildSection(theme, 'وصف الدورة', course.courseDescription, isDescription: true).animate().fadeIn(delay: 300.ms),
+                        _buildSkillsSection(theme, 'المهارات المكتسبة', course.skills).animate().fadeIn(delay: 400.ms),
                         const SizedBox(height: 40),
                         if (authProvider.isAuthenticated)
                           Center(
                             child: ElevatedButton.icon(
-                              icon: const Icon(Icons.app_registration_rounded),
-                              label: const Text('التسجيل في الدورة'),
-                              onPressed: () => _enrollInCourse(course),
-                              style: theme.elevatedButtonTheme.style?.copyWith(
-                                padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 48, vertical: 16)),
+                              icon: Icon(isCourseEnded ? Icons.lock_clock_outlined : Icons.app_registration_rounded),
+                              label: Text(isCourseEnded ? 'الدورة منتهية' : 'التسجيل في الدورة'),
+                              onPressed: isCourseEnded ? null : () => _enrollInCourse(course),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+                                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                disabledBackgroundColor: Colors.grey.shade400,
+                                disabledForegroundColor: Colors.white,
                               ),
                             ).animate(delay: 500.ms).scale(duration: 500.ms, curve: Curves.elasticOut),
                           ),
@@ -139,18 +142,23 @@ class _PublicCourseDetailsScreenState extends State<PublicCourseDetailsScreen> {
     );
   }
 
-  // --- دوال مساعدة لتنظيم الكود ---
   Widget _buildSectionTitle(ThemeData theme, String title) {
-    return Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: theme.primaryColor));
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Text(
+        title,
+        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: theme.primaryColor),
+      ),
+    );
   }
 
   Widget _buildInfoCard(ThemeData theme, TrainingCourse course) {
     return Card(
-      elevation: 4,
-      shadowColor: Colors.black.withOpacity(0.1),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       margin: const EdgeInsets.only(bottom: 24),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
             _buildInfoRow(theme, Icons.person_pin_circle_outlined, 'المدرب', course.trainersName ?? 'غير معروف'),
@@ -158,7 +166,7 @@ class _PublicCourseDetailsScreenState extends State<PublicCourseDetailsScreen> {
             _buildInfoRow(theme, Icons.location_on_outlined, 'الموقع', course.site ?? 'أونلاين'),
             _buildInfoRow(theme, Icons.bar_chart_outlined, 'المستوى', course.stage ?? 'مبتدئ'),
             _buildInfoRow(theme, Icons.calendar_today_outlined, 'التاريخ',
-              '${course.startDate != null ? DateFormat('dd/MM', 'ar').format(course.startDate!) : ''} - ${course.endDate != null ? DateFormat('dd/MM/yyyy', 'ar').format(course.endDate!) : ''}',
+              '${course.startDate != null ? DateFormat('d MMMM', 'ar').format(course.startDate!) : ''} - ${course.endDate != null ? DateFormat('d MMMM yyyy', 'ar').format(course.endDate!) : ''}',
             ),
             _buildInfoRow(theme, Icons.workspace_premium_outlined, 'شهادة', course.certificate ?? 'لا يوجد', noDivider: true),
           ],
@@ -172,29 +180,29 @@ class _PublicCourseDetailsScreenState extends State<PublicCourseDetailsScreen> {
       children: [
         Row(
           children: [
-            Icon(icon, color: theme.primaryColor, size: 20),
+            Icon(icon, color: theme.primaryColor, size: 22),
             const SizedBox(width: 16),
             Text('$label:', style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(width: 8),
             Expanded(child: Text(value, style: theme.textTheme.bodyLarge, overflow: TextOverflow.ellipsis)),
           ],
         ),
-        if (!noDivider) const Divider(height: 24),
+        if (!noDivider) const Divider(height: 28),
       ],
     );
   }
 
   Widget _buildSection(ThemeData theme, String title, String? content, {bool isDescription = false}) {
+    if (content == null || content.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(bottom: 24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionTitle(theme, title),
-          const SizedBox(height: 8),
           Text(
-            content ?? (isDescription ? 'لا يوجد وصف.' : 'غير محدد.'),
-            style: theme.textTheme.bodyLarge?.copyWith(height: isDescription ? 1.7 : 1.4, fontSize: 16),
+            content,
+            style: theme.textTheme.bodyLarge?.copyWith(height: 1.7, color: Colors.black87),
           ),
         ],
       ),
@@ -203,7 +211,7 @@ class _PublicCourseDetailsScreenState extends State<PublicCourseDetailsScreen> {
 
   Widget _buildSkillsSection(ThemeData theme, String title, String? skills) {
     final skillList = skills?.split(',').where((s) => s.trim().isNotEmpty).toList() ?? [];
-    if (skillList.isEmpty) return const SizedBox.shrink(); // لا تعرض القسم إذا لم تكن هناك مهارات
+    if (skillList.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 24.0),
@@ -211,14 +219,14 @@ class _PublicCourseDetailsScreenState extends State<PublicCourseDetailsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionTitle(theme, title),
-          const SizedBox(height: 12),
           Wrap(
-            spacing: 8.0,
-            runSpacing: 8.0,
+            spacing: 10.0,
+            runSpacing: 10.0,
             children: skillList.map((skill) => Chip(
-              label: Text(skill.trim(), style: TextStyle(color: theme.primaryColor)),
+              label: Text(skill.trim()),
               backgroundColor: theme.primaryColor.withOpacity(0.1),
-              side: BorderSide.none,
+              side: BorderSide(color: theme.primaryColor.withOpacity(0.2)),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             )).toList(),
           ),
         ],

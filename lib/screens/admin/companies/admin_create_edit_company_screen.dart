@@ -7,6 +7,7 @@ import '../../../models/user.dart'; // نحتاج موديل المستخدم ل
 import '../../../providers/admin_company_provider.dart';
 import '../../../providers/admin_user_provider.dart'; // لجلب قائمة المستخدمين (المدراء)
 import '../../../services/api_service.dart';
+import '../../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 
 class AdminCreateEditCompanyScreen extends StatefulWidget {
   final Company? company; // إذا كان null، فهذا يعني إنشاء جديد
@@ -141,7 +142,7 @@ class _AdminCreateEditCompanyScreenState extends State<AdminCreateEditCompanyScr
 
               // قائمة منسدلة لاختيار المدير المسؤول
               _isLoadingUsers
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(child: RiveLoadingIndicator()) // Replaced here
                   : DropdownButtonFormField<int>(
                 value: _companyData['UserID'],
                 hint: const Text('اختر المدير المسؤول'),

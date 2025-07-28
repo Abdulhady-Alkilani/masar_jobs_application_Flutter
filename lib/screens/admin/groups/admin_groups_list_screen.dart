@@ -6,6 +6,7 @@ import '../../../providers/admin_group_provider.dart';
 import '../../../models/group.dart';
 import 'admin_create_edit_group_screen.dart';
 import '../../../services/api_service.dart';
+import '../../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 
 class AdminGroupsListScreen extends StatefulWidget {
   const AdminGroupsListScreen({super.key});
@@ -65,7 +66,7 @@ class _AdminGroupsListScreenState extends State<AdminGroupsListScreen> {
       body: Consumer<AdminGroupProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
           if (provider.error != null) {
             return Center(child: Text('خطأ: ${provider.error}'));

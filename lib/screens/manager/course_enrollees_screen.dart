@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../providers/course_enrollees_provider.dart';
 import '../../models/enrollee.dart';
 import '../../services/api_service.dart';
+import '../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 
 class CourseEnrolleesScreen extends StatefulWidget {
   final int courseId;
@@ -55,7 +56,7 @@ class _CourseEnrolleesScreenState extends State<CourseEnrolleesScreen> {
       body: Consumer<CourseEnrolleesProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
           if (provider.error != null) {
             return Center(child: Text('خطأ: ${provider.error}'));

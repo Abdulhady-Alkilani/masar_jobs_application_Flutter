@@ -7,6 +7,7 @@ import '../../../models/user.dart';
 import '../../../providers/admin_job_provider.dart';
 import '../../../providers/admin_user_provider.dart'; // لجلب المدراء
 import '../../../services/api_service.dart';
+import '../../../widgets/rive_loading_indicator.dart';
 
 class AdminCreateEditJobScreen extends StatefulWidget {
   final JobOpportunity? job;
@@ -132,7 +133,7 @@ class _AdminCreateEditJobScreenState extends State<AdminCreateEditJobScreen> {
 
               const SizedBox(height: 16),
               _isLoadingUsers
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(child: RiveLoadingIndicator())
                   : DropdownButtonFormField<int>(
                 value: _jobData['UserID'],
                 hint: const Text('اختر الناشر'),

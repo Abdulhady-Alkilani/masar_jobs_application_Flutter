@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io'; // Added for File
 import '../models/company.dart';
 import '../services/api_service.dart';
 import '../providers/auth_provider.dart';
@@ -15,6 +16,7 @@ class ManagedCompanyProvider extends ChangeNotifier {
   bool get hasCompany => _company != null; // للتحقق بسهولة
 
   final ApiService _apiService = ApiService();
+
 
   // جلب بيانات الشركة التي يديرها المستخدم الحالي
   Future<void> fetchManagedCompany(BuildContext context) async {
@@ -86,19 +88,28 @@ class ManagedCompanyProvider extends ChangeNotifier {
 // a separate endpoint/logic is needed, and this provider would need a method for it.
 // Example placeholder:
 
-   Future<void> createManagedCompany(BuildContext context, Map<String, dynamic> companyData) async {
-       // ... loading/error state ...
-       try {
-           final token = Provider.of<AuthProvider>(context, listen: false).token;
-           if (token == null) throw ApiException(401, 'User not authenticated.');
-           // Assume API has a POST /company-manager/company endpoint for creation
-           _company = await _apiService.createManagedCompany(token, companyData);
-           print(_company);
-       } on ApiException catch (e) {
-          _error = e.message; throw e;
-       } catch (e) {
-          _error = 'Failed to create company: ${e.toString()}'; throw ApiException(0, _error!);
-       } finally { notifyListeners(); }
-   }
+   Future<void> requestCompanyCreationAsManager(BuildContext context, {required Map<String, String> fields, File? media}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final token = Provider.of<AuthProvider>(context, listen: false).token;
+      if (token == null) {
+        throw ApiException(401, 'User not authenticated.');
+      }
+      _company = await _apiService.createManagedCompany(token, fields);
+      print(_company);
+    } on ApiException catch (e) {
+      _error = e.message;
+      throw e;
+    } catch (e) {
+      _error = 'Failed to create company request: ${e.toString()}';
+      throw ApiException(0, _error!);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
 }

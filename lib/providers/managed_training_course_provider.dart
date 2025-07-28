@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/training_course.dart';
-import '../models/paginated_response.dart';
 import '../services/api_service.dart';
-import '../providers/auth_provider.dart';
+import 'auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class ManagedTrainingCourseProvider extends ChangeNotifier {
@@ -42,7 +41,7 @@ class ManagedTrainingCourseProvider extends ChangeNotifier {
       //    throw ApiException(403, 'User not authorized to manage courses.');
       // }
 
-      final paginatedResponse = await _apiService.fetchManagedCourses(token!, page: 1);
+      final paginatedResponse = await _apiService.fetchManagedCourses(token, page: 1);
       // print('Fetched initial managed courses response: $paginatedResponse'); // Debug print
 
       // التصحيح هنا: نستخدم PaginatedResponse.data مباشرة

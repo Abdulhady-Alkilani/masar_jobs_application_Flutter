@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../models/training_course.dart';
 import '../../providers/managed_training_course_provider.dart';
 import '../../services/api_service.dart';
+import '../../widgets/rive_loading_indicator.dart';
 
 class CreateEditCourseScreen extends StatefulWidget {
   final TrainingCourse? course;
@@ -140,7 +141,7 @@ class _CreateEditCourseScreenState extends State<CreateEditCourseScreen> {
       body: Consumer<ManagedTrainingCourseProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
           return ListView(
             padding: const EdgeInsets.all(16.0),

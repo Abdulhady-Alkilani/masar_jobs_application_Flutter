@@ -1,4 +1,4 @@
-import 'dart:convert'; // قد تحتاج لفك ترميز داخلي في المستقبل أو لطباعة Debug
+import 'package:flutter/foundation.dart'; // قد تحتاج لفك ترميز داخلي في المستقبل أو لطباعة Debug
 
 class PaginatedResponse<T> {
   final int? currentPage;

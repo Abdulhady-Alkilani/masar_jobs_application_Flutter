@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/admin_company_requests_provider.dart';
 import '../../../models/company.dart';
 import '../../../services/api_service.dart';
+import '../../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 
 class AdminCompanyRequestsScreen extends StatefulWidget {
   const AdminCompanyRequestsScreen({super.key});
@@ -67,7 +68,7 @@ class _AdminCompanyRequestsScreenState extends State<AdminCompanyRequestsScreen>
       body: Consumer<AdminCompanyRequestsProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.companyRequests.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
           if (provider.error != null) {
             return Center(child: Text('خطأ: ${provider.error}'));
@@ -122,7 +123,7 @@ class _AdminCompanyRequestsScreenState extends State<AdminCompanyRequestsScreen>
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 if (isProcessing)
-                  const SizedBox(width: 24, height: 24, child: CircularProgressIndicator())
+                  const SizedBox(width: 24, height: 24, child: RiveLoadingIndicator(size: 24)) // Replaced here
                 else ...[
                   TextButton(
                     onPressed: () => _handleRequest(

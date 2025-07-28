@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:masar_jobs/models/job_opportunity.dart';
+import 'package:masar_jobs/providers/auth_provider.dart';
+import 'package:masar_jobs/services/api_service.dart';
 import 'package:provider/provider.dart';
-import '../models/job_opportunity.dart';
-import '../models/paginated_response.dart';
-import '../services/api_service.dart';
-import '../providers/auth_provider.dart';
-
 
 class AdminJobProvider extends ChangeNotifier {
   List<JobOpportunity> _jobs = [];

@@ -1,10 +1,9 @@
-// lib/screens/admin/articles/admin_articles_list_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart'; // لتنسيق التاريخ
 import '../../../providers/admin_article_provider.dart';
 import '../../../models/article.dart';
+import '../../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 // TODO: قم باستيراد شاشة تفاصيل المقال للأدمن وشاشة إضافة/تعديل المقال
 import 'admin_article_details_screen.dart';
 import 'admin_create_edit_article_screen.dart';
@@ -62,7 +61,7 @@ class _AdminArticlesListScreenState extends State<AdminArticlesListScreen> {
         builder: (context, provider, child) {
           // عرض مؤشر تحميل إذا كانت القائمة فارغة ويتم تحميلها لأول مرة
           if (provider.isLoading && provider.articles.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
 
           // عرض رسالة خطأ إذا حدث خطأ والقائمة فارغة
@@ -86,7 +85,7 @@ class _AdminArticlesListScreenState extends State<AdminArticlesListScreen> {
                 if (index == provider.articles.length) {
                   return const Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: Center(child: CircularProgressIndicator()),
+                    child: Center(child: RiveLoadingIndicator()),
                   );
                 }
 

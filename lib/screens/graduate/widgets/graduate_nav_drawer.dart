@@ -39,7 +39,7 @@ class _DrawerContent extends StatelessWidget {
       {'icon': Icons.work_history_outlined, 'title': 'طلباتي للتوظيف', 'route': () => const MyApplicationsScreen()},
       {'icon': Icons.school_outlined, 'title': 'دوراتي المسجلة', 'route': () => const MyEnrollmentsScreen()},
       {'icon': Icons.recommend_outlined, 'title': 'توصيات لك', 'route': () => const RecommendationsScreen()},
-      {'icon': Icons.groups_outlined, 'title': 'مجموعات مسار', 'route': () => const PublicGroupsScreen()},
+      {'icon': Icons.groups_outlined, 'title': 'المجموعات', 'route': () => const PublicGroupsScreen()},
     ];
 
     return Drawer(
@@ -53,7 +53,7 @@ class _DrawerContent extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               // لون زجاجي شبه شفاف
-              color: theme.primaryColor.withOpacity(0.15),
+              color: theme.colorScheme.secondary.withOpacity(0.85),
               // حدود مضيئة
               border: Border(left: BorderSide(color: theme.colorScheme.secondary.withOpacity(0.5))),
             ),
@@ -74,7 +74,7 @@ class _DrawerContent extends StatelessWidget {
                           Navigator.pop(context);
                           Navigator.push(context, MaterialPageRoute(builder: (_) => (item['route'] as Function)()));
                         },
-                      ).animate(delay: (100 * (index + 1)).ms).fadeIn().slideX(begin: 0.5);
+                      ).animate(delay: (100 * (index + 1)).ms).fadeIn().slideX(begin: -0.5);
                     },
                   ),
                 ),
@@ -157,7 +157,7 @@ class _MenuItemState extends State<MenuItem> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = widget.isLogout ? Colors.red.shade400 : Colors.white;
+    final color = widget.isLogout ? theme.colorScheme.error : Colors.white;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -170,7 +170,7 @@ class _MenuItemState extends State<MenuItem> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: _isHovered ? Colors.white.withOpacity(0.15) : Colors.transparent,
+            color: _isHovered ? theme.colorScheme.secondary.withOpacity(0.2) : Colors.transparent,
             boxShadow: _isHovered ? [
               BoxShadow(
                 color: theme.colorScheme.secondary.withOpacity(0.5),

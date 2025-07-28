@@ -6,6 +6,7 @@ import '../../providers/managed_training_course_provider.dart';
 import '../../models/training_course.dart';
 import 'create_edit_course_screen.dart'; // شاشة لإنشاء/تعديل دورة
 import 'course_enrollees_screen.dart'; // شاشة لعرض المسجلين
+import '../../widgets/rive_loading_indicator.dart';
 
 class ManagedCoursesListScreen extends StatefulWidget {
   const ManagedCoursesListScreen({super.key});
@@ -30,7 +31,7 @@ class _ManagedCoursesListScreenState extends State<ManagedCoursesListScreen> {
       body: Consumer<ManagedTrainingCourseProvider>(
         builder: (context, courseProvider, child) {
           if (courseProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
 
           if (courseProvider.error != null) {

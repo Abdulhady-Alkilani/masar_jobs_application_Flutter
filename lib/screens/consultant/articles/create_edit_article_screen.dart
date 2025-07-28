@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../../../models/article.dart';
 import '../../../providers/consultant_article_provider.dart';
 import '../../../services/api_service.dart';
+import '../../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 
 class CreateEditArticleScreen extends StatefulWidget {
   final Article? article;
@@ -79,7 +80,8 @@ class _CreateEditArticleScreenState extends State<CreateEditArticleScreen> {
       try {
         if (_isEditing) {
           await provider.updateArticle(context, widget.article!.articleId!, _articleData);
-        } else {
+        }
+        else {
           await provider.createArticle(context, _articleData);
         }
         if (mounted) {
@@ -132,7 +134,7 @@ class _CreateEditArticleScreenState extends State<CreateEditArticleScreen> {
               _buildPdfPicker(theme),
               const SizedBox(height: 40),
               _isLoading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(child: RiveLoadingIndicator()) // Replaced here
                   : ElevatedButton.icon(
                 onPressed: _submitForm,
                 icon: Icon(_isEditing ? Icons.save_alt_rounded : Icons.publish_rounded),

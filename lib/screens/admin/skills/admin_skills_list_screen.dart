@@ -6,6 +6,7 @@ import '../../../providers/admin_skill_provider.dart';
 import '../../../models/skill.dart';
 import 'admin_create_edit_skill_screen.dart';
 import '../../../services/api_service.dart';
+import '../../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 
 class AdminSkillsListScreen extends StatefulWidget {
   const AdminSkillsListScreen({super.key});
@@ -66,7 +67,7 @@ class _AdminSkillsListScreenState extends State<AdminSkillsListScreen> {
       body: Consumer<AdminSkillProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
           if (provider.error != null) {
             return Center(child: Text('خطأ: ${provider.error}'));

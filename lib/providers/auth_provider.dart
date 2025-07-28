@@ -43,22 +43,30 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// تسجيل مستخدم جديد.
+// في AuthProvider
   Future<void> register(String firstName, String lastName, String username, String email, String password, String passwordConfirmation, String phone, String type) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
+    print("AuthProvider: [REGISTER] Process started for email: $email");
 
     try {
+      print("AuthProvider: [REGISTER] Calling ApiService.registerUser...");
       final authResponse = await _apiService.registerUser(firstName, lastName, username, email, password, passwordConfirmation, phone, type);
+      print("AuthProvider: [REGISTER] API call successful. Token received.");
+
       _user = authResponse.user;
       _token = authResponse.accessToken;
+      print("AuthProvider: [REGISTER] User and token stored locally. User type: ${_user?.type}");
+
     } catch (e) {
+      print("AuthProvider: [REGISTER] An error occurred: $e");
       _user = null;
       _token = null;
-      rethrow; // إعادة رمي الخطأ للواجهة لعرضه
+      rethrow;
     } finally {
       _isLoading = false;
+      print("AuthProvider: [REGISTER] Process finished. IsAuthenticated: $isAuthenticated");
       notifyListeners();
     }
   }
@@ -67,60 +75,30 @@ class AuthProvider extends ChangeNotifier {
 // في ملف: lib/providers/auth_provider.dart
 // داخل كلاس: AuthProvider
 
-  /// تسجيل دخول المستخدم مع التحقق من حالته وتتبع العملية.
-  Future<void> login(String email, String password) async {
-    // الخطوة 1: إعلام الواجهة ببدء عملية التحميل
+// في AuthProvider
+  Future<bool> login(String email, String password) async {
     _isLoading = true;
-    _error = null; // مسح أي أخطاء سابقة
+    _error = null;
     notifyListeners();
-
-    print("AuthProvider: 1. Login process started.");
+    print("AuthProvider: [LOGIN] Process started for email: $email");
 
     try {
-      // الخطوة 2: استدعاء API لإرسال بيانات تسجيل الدخول
-      print("AuthProvider: 2. Calling API with email: $email");
+      print("AuthProvider: [LOGIN] Calling ApiService.loginUser...");
       final authResponse = await _apiService.loginUser(email, password);
-      print("AuthProvider: 3. API call successful. Received user type: ${authResponse.user?.type}, status: ${authResponse.user?.status}");
+      print("AuthProvider: [LOGIN] API call successful. Token received.");
 
-      // الخطوة 3: التحقق من صلاحية الحساب (Business Logic)
-      final userStatus = authResponse.user?.status;
-
-      // التحقق إذا كان الحساب معلقاً
-      if (userStatus == 'pending') {
-        print("AuthProvider: 4a. User status is 'pending'. Aborting login.");
-        await _apiService.removeAuthToken(); // إزالة التوكن إذا كان قد تم حفظه بالخطأ
-        throw ApiException(403, 'حسابك لا يزال قيد المراجعة. يرجى الانتظار حتى يتم تفعيله.');
-      }
-
-      // التحقق إذا كان الحساب مرفوضاً أو محظوراً
-      if (userStatus == 'rejected' || userStatus == 'banned') {
-        print("AuthProvider: 4b. User status is '$userStatus'. Aborting login.");
-        await _apiService.removeAuthToken();
-        throw ApiException(403, 'تم رفض أو حظر هذا الحساب. يرجى التواصل مع الإدارة.');
-      }
-
-      // الخطوة 4: إذا تم اجتياز كل عمليات التحقق بنجاح
-      print("AuthProvider: 5. All checks passed. Storing user and token.");
       _user = authResponse.user;
       _token = authResponse.accessToken;
-
+      print("AuthProvider: [LOGIN] User and token stored locally. User type: ${_user?.type}");
+      return true; // Indicate success
     } catch (e) {
-      // هذا سيلتقط أي خطأ، سواء من API (مثل كلمة مرور خاطئة)
-      // أو من منطق التحقق الذي أضفناه (مثل حساب معلق)
-      print("AuthProvider: 6. Caught an error during login: $e");
-
-      // تأكد من مسح أي بيانات قديمة للمستخدم
+      print("AuthProvider: [LOGIN] An error occurred: $e");
       _user = null;
       _token = null;
-
-      // أعد رمي الخطأ لتتمكن الواجهة (LoginScreen) من التقاطه وعرضه
-      rethrow;
+      rethrow; // Rethrow the exception to be caught in the UI
     } finally {
-      // الخطوة الأخيرة: هذا الكود سيعمل دائماً، سواء نجحت العملية أم فشلت
       _isLoading = false;
-      // طباعة الحالة النهائية للمصادقة
-      print("AuthProvider: 7. Login process finished. isAuthenticated is now: $isAuthenticated");
-      // إعلام الواجهة بانتهاء التحميل وتحديث الحالة (سواء كانت نجاحاً أو فشلاً)
+      print("AuthProvider: [LOGIN] Process finished. IsAuthenticated: $isAuthenticated");
       notifyListeners();
     }
   }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io'; // Added for File
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart'; // For kDebugMode
 import 'package:shared_preferences/shared_preferences.dart'; // <--- 1. إضافة استيراد SharedPreferences
@@ -39,6 +40,8 @@ class ApiException implements Exception {
 class ApiService {
   // عنوان URL الأساسي لواجهة برمجة التطبيقات
   static const String _baseUrl = 'https://powderblue-woodpecker-887296.hostingersite.com/api/v1';
+
+  static const String baseUrlStorage = 'https://powderblue-woodpecker-887296.hostingersite.com/storage/';
 
   // مفتاح تخزين التوكن في SharedPreferences
   static const String _authTokenKey = 'authToken'; // <--- تعريف مفتاح التوكن
@@ -111,37 +114,38 @@ class ApiService {
     return await http.delete(url, headers: headers);
   }
 
-  // طريقة مساعدة للتحقق من الاستجابة
+  // في ملف api_service.dart
+
   dynamic _handleResponse(http.Response response) {
     if (kDebugMode) {
-      print('Response Status: ${response.statusCode}');
+      print('--- API Response ---');
+      print('Status Code: ${response.statusCode}');
       print('Response Body: ${response.body}');
+      print('--------------------');
     }
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      if (response.body.isNotEmpty && response.statusCode != 204) { // Handle 204 No Content
-        return jsonDecode(response.body);
-      }
-      return {}; // Return empty map for successful responses with no body (like 204)
-    } else if (response.statusCode == 401) {
-      // عند الحصول على 401، قد يكون التوكن غير صالح، يجب إزالته محليًا
-      removeAuthToken(); // <--- إزالة التوكن عند فشل المصادقة
-      throw ApiException(response.statusCode, 'Unauthenticated.', errors: jsonDecode(response.body)['errors']);
-    } else if (response.statusCode == 403) {
-      // قد ترغب في إزالة التوكن إذا لم يكن المستخدم مخولاً على الإطلاق، أو تركه إذا كان الخطأ خاصاً بمسار واحد
-      throw ApiException(response.statusCode, 'Unauthorized.', errors: jsonDecode(response.body)['errors']);
-    } else if (response.statusCode == 404) {
-      final decodedBody = jsonDecode(response.body);
-      throw ApiException(response.statusCode, decodedBody['message'] ?? 'Not Found.', errors: decodedBody['errors']);
-    } else if (response.statusCode == 422) {
-      final decodedBody = jsonDecode(response.body);
-      throw ApiException(
-        response.statusCode,
-        decodedBody['message'] ?? 'Validation Error.',
-        errors: decodedBody['errors'],
-      );
-    } else {
+
+    // التحقق أولاً إذا كانت الاستجابة HTML
+    if (response.body.trim().startsWith('<!DOCTYPE html>')) {
+      print('API Error: Received HTML page instead of JSON. Check hosting bot protection.');
+      throw ApiException(response.statusCode, 'خطأ في السيرفر، تم استقبال صفحة ويب بدلاً من بيانات.');
+    }
+
+    // الآن نحاول فك ترميز JSON
+    try {
       final decodedBody = response.body.isNotEmpty ? jsonDecode(response.body) : {};
-      throw ApiException(response.statusCode, decodedBody['message'] ?? 'Server Error: ${response.statusCode}', errors: decodedBody['errors']);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return decodedBody;
+      } else {
+        throw ApiException(
+          response.statusCode,
+          decodedBody['message'] ?? 'حدث خطأ غير معروف',
+          errors: decodedBody['errors'] as Map<String, dynamic>?,
+        );
+      }
+    } on FormatException catch (e) {
+      print('API Error: Failed to decode JSON. Error: $e');
+      throw ApiException(response.statusCode, 'السيرفر أعاد استجابة غير متوقعة. لا يمكن قراءة البيانات.');
     }
   }
 
@@ -315,6 +319,12 @@ class ApiService {
     return User.fromJson(decodedData as Map<String, dynamic>);
   }
 
+  /// جلب مستخدم محدد بواسطة ID (عام)
+  Future<User> getUserById(int userId) async {
+    final response = await _get('/users/$userId');
+    return User.fromJson(_handleResponse(response));
+  }
+
   // ... (باقي توابع ApiService) ...
 
   /// جلب ملف المستخدم الشخصي
@@ -387,7 +397,7 @@ class ApiService {
 
   /// جلب بيانات الشركة التي يديرها المستخدم
   Future<Company> fetchManagedCompany(String token) async {
-    final response = await _get('/company-manager/company', token: token);
+    final response = await _get('/company-manager/company-request', token: token);
     return Company.fromJson(_handleResponse(response));
   }
 
@@ -399,7 +409,7 @@ class ApiService {
   /// هذا مجرد هيكل بناءً على الاسم المطلوب.
   Future<Company> createManagedCompany(String token, Map<String, dynamic> companyData) async {
     // يفترض أن المسار هو POST /company-manager/company
-    final response = await _post('/company-manager/company', companyData, token: token);
+    final response = await _post('/company-manager/company-request', companyData, token: token);
     // يجب أن يعيد المتحكم بيانات الشركة المنشأة في حالة النجاح (201 Created)
     return Company.fromJson(_handleResponse(response));
   }

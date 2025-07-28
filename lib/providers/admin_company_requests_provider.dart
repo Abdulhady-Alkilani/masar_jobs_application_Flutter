@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:masar_jobs/models/company.dart';
+import 'package:masar_jobs/providers/auth_provider.dart';
+import 'package:masar_jobs/services/api_service.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart'; // تأكد من المسار
-import '../models/company.dart'; // تأكد من المسار
-import '../models/paginated_response.dart'; // تأكد من المسار
-import '../services/api_service.dart'; // تأكد من المسار
 
 class AdminCompanyRequestsProvider extends ChangeNotifier {
   List<Company> _companyRequests = []; // Companies with status 'pending'
@@ -25,53 +24,6 @@ class AdminCompanyRequestsProvider extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  Future<void> _processRequest(BuildContext context, int companyId, Future<Company> Function(String, int) apiCall) async {
-    _processingCompanyId = companyId; // تحديد الشركة قيد المعالجة
-    notifyListeners();
-
-    try {
-      final token = Provider.of<AuthProvider>(context, listen: false).token;
-      if (token == null) throw ApiException(401, 'User not authenticated.');
-
-      await apiCall(token, companyId);
-
-      _companyRequests.removeWhere((company) => company.companyId == companyId);
-
-    } on ApiException catch (e) {
-      // يمكنك عرض رسالة خطأ هنا إذا أردت
-      print('Failed to process request for company $companyId: ${e.message}');
-      rethrow; // رمي الخطأ للواجهة
-    } finally {
-      _processingCompanyId = null; // إنهاء حالة المعالجة
-      notifyListeners();
-    }
-  }
-
-  // تابع مساعدة للتحويل الآمن من List<dynamic> إلى List<Company>
-  List<Company> _convertDynamicListToCompanyList(List<dynamic>? data) {
-    if (data == null) return []; // إذا كانت القائمة الأصلية null، أعد قائمة فارغة
-
-    List<Company> companyList = [];
-    for (final item in data) {
-      // تحقق مما إذا كان العنصر هو خريطة قبل محاولة فك ترميزه كـ Company
-      if (item is Map<String, dynamic>) {
-        try {
-          // حاول فك ترميز العنصر كـ Company
-          companyList.add(Company.fromJson(item));
-        } catch (e) {
-          // إذا فشل فك ترميز عنصر واحد، قم بتسجيل الخطأ وتجاهل هذا العنصر
-          print('Error parsing individual Company item in requests list: $e for item $item');
-        }
-      } else {
-        // إذا لم يكن العنصر خريطة، قم بتسجيل الخطأ وتجاهله
-        print('Skipping unexpected item type in Company requests list: $item');
-      }
-    }
-    return companyList; // أعد القائمة التي تم بناؤها بأمان
-  }
-
-
-  // جلب طلبات إنشاء الشركات المعلقة (لأدمن) - الصفحة الأولى
   Future<void> fetchCompanyRequests(BuildContext context) async {
     _isLoading = true;
     _error = null;
@@ -81,22 +33,13 @@ class AdminCompanyRequestsProvider extends ChangeNotifier {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
-      final paginatedResponse = await _apiService.fetchCompanyRequests(token!, page: 1);
-      // print('Fetched initial company requests response: $paginatedResponse'); // Debug print
-
-      // استخدم التابع المساعد للتحويل الآمن
-      _companyRequests = _convertDynamicListToCompanyList(paginatedResponse.data);
-
-
-      _currentPage = paginatedResponse.currentPage ?? 1;
+      final paginatedResponse = await _apiService.fetchCompanyRequests(token, page: _currentPage);
+      _companyRequests.addAll(paginatedResponse.data ?? []);
       _lastPage = paginatedResponse.lastPage;
-
-    } on ApiException catch (e) {
-      _error = e.message;
-      print('API Exception during fetchCompanyRequests: ${e.toString()}');
+      _currentPage = paginatedResponse.currentPage ?? _currentPage;
     } catch (e) {
-      _error = 'Failed to load company requests: ${e.toString()}';
-      print('Unexpected error during fetchCompanyRequests: ${e.toString()}');
+      _error = e.toString();
+      print(_error);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -123,7 +66,7 @@ class AdminCompanyRequestsProvider extends ChangeNotifier {
       // print('Fetched more company requests response: $paginatedResponse'); // Debug print
 
       // استخدم التابع المساعد للتحويل الآمن للإضافة
-      _companyRequests.addAll(_convertDynamicListToCompanyList(paginatedResponse.data));
+      _companyRequests.addAll(paginatedResponse.data ?? []);
 
 
       _currentPage = paginatedResponse.currentPage ?? _currentPage;

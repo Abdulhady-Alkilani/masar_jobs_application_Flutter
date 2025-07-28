@@ -1,3 +1,5 @@
+import 'package:masar_jobs/services/api_service.dart';
+
 import 'user.dart'; // Or import 'partial_user.dart'; if the nested user is always partial
 
 class Article {
@@ -36,8 +38,12 @@ class Article {
       description: json['Description'] as String?,
       date: json['Date'] != null ? DateTime.parse(json['Date'] as String) : null,
       type: json['Type'] as String?,
-      articlePhoto: json['Article Photo'] as String?,
-      pdfLink: json['pdf_link'] as String?, // <-- 3. فك ترميزه من JSON
+      articlePhoto: json['Article Photo'] !=null
+          ?ApiService.baseUrlStorage + (json['Article Photo'] as String )
+      : null,
+      pdfLink: json['pdf_link'] !=null
+          ?ApiService.baseUrlStorage + (json['pdf_link'] as String )
+          : null, // <-- 3. فك ترميزه من JSON
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -61,6 +67,7 @@ class Article {
       'Date': date?.toIso8601String(),
       'Type': type,
       'Article Photo': articlePhoto,
+      'pdf_link':pdfLink,
       // created_at, updated_at, user not sent back
     };
   }

@@ -7,6 +7,7 @@ import '../../models/job_opportunity.dart';
 import '../../services/api_service.dart';
 import 'create_edit_job_screen.dart';
 import 'job_applicants_screen.dart';
+import '../../widgets/rive_loading_indicator.dart';
 
 class ManagedJobsListScreen extends StatefulWidget {
   const ManagedJobsListScreen({super.key});
@@ -31,7 +32,7 @@ class _ManagedJobsListScreenState extends State<ManagedJobsListScreen> {
       body: Consumer<ManagedJobOpportunityProvider>(
         builder: (context, jobProvider, child) {
           if (jobProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
 
           if (jobProvider.error != null) {

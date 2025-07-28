@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../providers/public_group_provider.dart';
 import '../../models/group.dart';
 import '../widgets/empty_state_widget.dart';
+import '../../widgets/rive_loading_indicator.dart';
 
 class PublicGroupsScreen extends StatefulWidget {
   const PublicGroupsScreen({super.key});
@@ -28,13 +29,13 @@ class _PublicGroupsScreenState extends State<PublicGroupsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('مجموعات مسار'),
+        title: const Text('المجموعات'),
       ),
       body: Consumer<PublicGroupProvider>(
         builder: (context, provider, child) {
           // الحالة 1: التحميل
           if (provider.isLoading && provider.groups.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           }
 
           // الحالة 2: وجود خطأ
@@ -116,7 +117,7 @@ class GroupCard extends StatelessWidget {
           child: Icon(Icons.telegram, color: Colors.white, size: 32),
         ),
         title: Text(
-          'مجموعة مسار على تيليجرام #$index',
+          'مجموعة على تيليجرام #$index',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+import '../../widgets/rive_loading_indicator.dart';
 
 class EditManagerProfileScreen extends StatefulWidget {
   final User user;
@@ -193,7 +194,7 @@ class _EditManagerProfileScreenState extends State<EditManagerProfileScreen> {
 
                 // زر الحفظ الرئيسي
                 _isSubmitting
-                    ? const CircularProgressIndicator()
+                    ? const RiveLoadingIndicator()
                     : ElevatedButton.icon(
                   icon: const Icon(Icons.save),
                   label: const Text('حفظ التغييرات'),

@@ -1,6 +1,6 @@
 {
   "@@locale": "ar",
-  "appTitle": "تطبيق مسار للوظائف",
+  "appTitle": "Masar Jobs App",
 
   // --- General ---
   "loading": "جارٍ التحميل...",
@@ -98,7 +98,7 @@
   "application_status": "الحالة: {status}",
   "application_date": "تاريخ التقديم: {date}",
   "application_notes": "ملاحظات المتقدم:",
-  "application_cv_path": "مسار السيرة الذاتية:",
+  "application_cv_path": "رابط السيرة الذاتية:",
   "button_apply": "تقديم طلب",
   "message_already_applied": "أنت مسجل بالفعل في هذه الوظيفة.",
   "message_job_closed": "فرصة العمل هذه لم تعد تستقبل طلبات.",
@@ -250,7 +250,7 @@
   "label_application_id": "معرف الطلب:",
   "label_enrollment_id": "معرف التسجيل:",
   "label_applicant_notes": "ملاحظات المتقدم:",
-  "label_applicant_cv": "مسار السيرة الذاتية:",
+  "label_applicant_cv": "رابط السيرة الذاتية:",
   "label_enrollee_completion_date": "تاريخ الإكمال:",
    "message_no_applicant_notes": "لا توجد ملاحظات.",
     "message_no_qualifications_listed": "لم يتم تحديد مؤهلات.",
@@ -351,7 +351,7 @@
   "message_operation_failed": "فشلت العملية.",
 
    "message_applied_via_seeder": "تم التقديم عبر البيانات الأولية.",
-   "message_no_applicant_cv": "لا يوجد مسار للسيرة الذاتية.",
+   "message_no_applicant_cv": "لا يوجد رابط للسيرة الذاتية.",
    "message_no_applicant_phone": "رقم الهاتف غير متاح.",
    "message_no_applicant_email": "البريد الإلكتروني غير متاح.",
    "message_no_applicant_profile": "الملف الشخصي غير متاح.",

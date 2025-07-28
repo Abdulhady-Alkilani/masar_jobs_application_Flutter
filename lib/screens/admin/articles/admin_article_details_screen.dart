@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart'; // لتنسيق التاريخ
+import '../../../widgets/rive_loading_indicator.dart'; // Import RiveLoadingIndicator
 // ستحتاج مكتبة url_launcher لفتح الرابط إذا كان موجوداً
 // import 'package:url_launcher/url_launcher.dart';
 
@@ -102,7 +103,7 @@ class _AdminArticleDetailsScreenState extends State<AdminArticleDetailsScreen> {
         builder: (context, snapshot) {
           // حالات التحميل والخطأ والبيانات
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: RiveLoadingIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('حدث خطأ: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data == null) {
@@ -151,7 +152,7 @@ class _AdminArticleDetailsScreenState extends State<AdminArticleDetailsScreen> {
                   const SizedBox(height: 8),
                   if (article.date != null)
                     Text(
-                      'تاريخ النشر: ${DateFormat.yMMMd('ar').format(article.date!)}',
+                      'تاريخ الن��ر: ${DateFormat.yMMMd('ar').format(article.date!)}',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey),
                     ),
                   const SizedBox(height: 16),

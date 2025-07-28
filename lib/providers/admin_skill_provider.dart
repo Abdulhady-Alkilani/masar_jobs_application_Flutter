@@ -31,7 +31,7 @@ class AdminSkillProvider extends ChangeNotifier {
       final token = Provider.of<AuthProvider>(context, listen: false).token;
       if (token == null) throw ApiException(401, 'User not authenticated.');
 
-      _skills = await _apiService.fetchAllSkillsAdmin(token!);
+      _skills = await _apiService.fetchAllSkillsAdmin(token);
       _skills.sort((a, b) => a.name!.compareTo(b.name!)); // ترتيب أبجدي
 
     } on ApiException catch (e) {
