@@ -23,7 +23,7 @@ class UserProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('الملف الشخصي'),
+        title: const Text('الملف الشخصي', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: theme.primaryColor,

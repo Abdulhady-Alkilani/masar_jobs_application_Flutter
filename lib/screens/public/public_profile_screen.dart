@@ -29,7 +29,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الملف الشخصي'),
+        title: const Text('الملف الشخصي', style: TextStyle(color: Colors.black)),
       ),
       body: FutureBuilder<User>(
         future: _userFuture,

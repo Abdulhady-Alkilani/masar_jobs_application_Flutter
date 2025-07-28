@@ -30,7 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Theme.of(context).colorScheme.background,
       body: Center(
         child: Image.asset(
-          'assets/image/logo.png',
+          'assets/image/ChatGPT Image Apr 17, 2025, 11_34_59 PM.png',
           width: 250,
           height: 250,
         ).animate()

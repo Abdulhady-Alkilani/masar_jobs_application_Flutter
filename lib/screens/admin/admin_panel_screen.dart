@@ -24,7 +24,13 @@ class AdminPanelScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('لوحة تحكم الأدمن'),
         actions: [
-          // إضافة زر تسجيل الخروج في قائمة الإجراءات (actions)
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Image.asset(
+              'assets/image/ChatGPT Image Apr 17, 2025, 11_34_59 PM.png',
+              height: 50, // حجم وسط
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.logout), // أيقونة تسجيل الخروج
             tooltip: 'تسجيل الخروج', // نص يظهر عند التمرير فوق الزر

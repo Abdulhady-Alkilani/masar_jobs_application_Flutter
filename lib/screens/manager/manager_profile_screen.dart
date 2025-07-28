@@ -26,7 +26,7 @@ class ManagerProfileScreen extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('الملف الشخصي'),
+            title: const Text('الملف الشخصي', style: TextStyle(color: Colors.black)),
             actions: [
               IconButton(
                 icon: const Icon(Icons.edit),

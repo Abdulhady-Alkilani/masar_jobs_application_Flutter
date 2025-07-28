@@ -45,21 +45,12 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         centerTitle: false, // Align title to start
         iconTheme: IconThemeData(color: theme.colorScheme.primary),
-        title: Row(
-          children: [
-            Image.asset(
-              'assets/image/app_logo.png', // TODO: Replace with actual app logo
-              height: 40, // Adjust height as needed
-            ),
-            const SizedBox(width: 16),
-            Text(
-              ['الوظائف', 'الدورات', 'المقالات'][_selectedIndex],
-              style: TextStyle(
-                color: theme.colorScheme.onBackground,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+        title: Text(
+          ['الوظائف', 'الدورات', 'المقالات'][_selectedIndex],
+          style: TextStyle(
+            color: theme.colorScheme.onBackground,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           Consumer<ThemeProvider>(

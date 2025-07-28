@@ -48,9 +48,9 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
       appBar: AppBar(
         backgroundColor: neumorphicBackgroundColor,
         elevation: 0,
-        title: Text(
-          companyProvider.company?.name ?? 'لوحة التحكم',
-          style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.bold),
+        title: Image.asset(
+          'assets/image/ChatGPT Image Apr 17, 2025, 11_34_59 PM.png',
+          height: 50, // حجم وسط
         ),
         iconTheme: IconThemeData(color: theme.primaryColor),
         actions: [
@@ -396,7 +396,7 @@ class __MenuItemState extends State<_MenuItem> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = widget.isLogout ? Colors.red.shade400 : theme.colorScheme.onSurface;
+    final color = widget.isLogout ? Colors.red.shade400 : Colors.black;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),

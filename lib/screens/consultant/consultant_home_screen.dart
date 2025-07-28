@@ -40,7 +40,10 @@ class _ConsultantHomeScreenState extends State<ConsultantHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(['المقالات', 'الوظائف', 'الدورات'][_selectedIndex]),
+        title: Image.asset(
+          'assets/image/ChatGPT Image Apr 17, 2025, 11_34_59 PM.png',
+          height: 50, // حجم وسط
+        ),
       ),
       // --- هنا نستخدم الـ Drawer بالطريقة القياسية ---
       drawer: const ConsultantNavDrawer(),

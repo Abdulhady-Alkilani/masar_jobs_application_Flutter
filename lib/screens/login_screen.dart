@@ -98,24 +98,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'أهلاً بك',
-                      style: theme.textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.primaryColor),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          'assets/image/app_logo.png', // TODO: Replace with actual app logo
-                          height: 30, // Adjust height as needed
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('ابدأ رحلتك المهنية مع',
-                            style: TextStyle(fontSize: 18, color: Colors.black54)),
-                      ],
+                    Image.asset(
+                      'assets/image/ChatGPT Image Apr 17, 2025, 11_34_59 PM.png',
+                      height: 150,
                     ),
                     const SizedBox(height: 50),
 

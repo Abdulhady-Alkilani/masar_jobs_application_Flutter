@@ -26,7 +26,7 @@ class _GeminiChatScreenState extends State<GeminiChatScreen> {
   }
 
   void _initializeChat() {
-    final apiKey = dotenv.env['GEMINI_API_KEY'];
+    const apiKey = 'AIzaSyARqrwtpV9ddvoWq7-DfIRV5bPKwPG-TO4';
     if (apiKey == null || apiKey.isEmpty) {
       setState(() {
         _apiKeyMissing = true;
@@ -34,7 +34,7 @@ class _GeminiChatScreenState extends State<GeminiChatScreen> {
       print('GEMINI_API_KEY not found in .env file');
       return;
     }
-    _model = GenerativeModel(model: 'gemini-pro', apiKey: apiKey);
+    _model = GenerativeModel(model: 'gemini-2.5-flash-lite', apiKey: apiKey);
   }
 
   void _sendMessage() async {
